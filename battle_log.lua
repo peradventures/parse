@@ -1,24 +1,37 @@
+Blog_Window,  Blog_Content  = build_hud_box(1200,  800, nil, 9, 50)
+
 Blog = {}
 Blog_Length  = 15
 Show_Blog    = true
 Blog_Type    = 'log'
 Focus_Entity = 'Amarara'
+Blog_Default_Color = c_white
+Show_Melee   = false
 
 --[[
-    DESCRIPTION:    Update the battle log.
-]] 
-function Update_Blog()
-    if Show_Blog then blog_box:show() else blog_box:hide() end
+    DESCRIPTION:    Refresh the battle log.
+]]
+function Refresh_Blog()
+    if Show_Blog then Blog_Window:show() else Blog_Window:hide() end
 
     if Blog_Type == 'log' then
-        blog_content.modestates = concat_strings(Blog)
-        blog_box:update(blog_content)
+        Blog_Content.modestates = concat_strings(Blog)
+        Blog_Window:update(Blog_Content)
 
     else
         focus_player()
-        blog_content.modestates = concat_strings(focus_layout)
-        blog_box:update(blog_content)
+        Blog_Content.modestates = concat_strings(focus_layout)
+        Blog_Window:update(Blog_Content)
     end
+end
+
+--[[
+    DESCRIPTION:    Turn the Blog on or off (visually).
+]]
+function Toggle_Blog()
+    Show_Blog  = not Show_Blog  
+    Refresh_Blog()
+    windower.add_to_chat(c_chat, 'Battle Log visibility is now: ' ..tostring(Show_Blog))
 end
 
 --[[
@@ -29,24 +42,77 @@ end
         damage     : Usually how much damage the action did
         line_color : The color that this line in the battle log should be
         tp_value   : How much TP was used by the weaponskill
-]] 
+]]
 function Add_Message_To_Battle_Log(player_name, action_name, damage, line_color, tp_value)
-    
-    line_color = Message_Line_Color(line_color, player_name)
     
     -- If the blog is at max length then we will need to remove the last element
     if Count_Log_Elements() >= Blog_Length then table.remove(Blog, Blog_Length) end
 
     -- Message Components
-    local player_name = String_Length(player_name, 9)
-    local damage      = Format_Number(damage, 6)
-    local action_name = String_Length(action_name, 15)
-    local tp_value    = Message_TP_String(tp_value)
+    local player_name = Blog_Name(player_name)
+    local damage      = Blog_Damage(damage)
+    local action_name = Blog_Action(action_name)
+    local tp_value    = Blog_TP(tp_value)
 
     -- Need the space at the beginning to keep the color cut off glitch from happening.
-    table.insert(Blog, 1, ' '..line_color..player_name..' '..damage..' '..action_name..' '..tp_value..c_white)
+    table.insert(Blog, 1, ' '..player_name..' '..damage..' '..action_name..' '..tp_value..Blog_Default_Color)
     
-    Update_Blog()
+    Refresh_Blog()
+end
+
+--[[
+    DESCRIPTION:    Format the name component of the battle log.
+]]
+function Blog_Name(player_name)
+    local color = Blog_Default_Color
+    
+    if Is_Me(player_name) then color = c_bright_green end
+
+    return Format_String(player_name, 9, color)
+end
+
+--[[
+    DESCRIPTION:    Format the damage component of the battle log.
+]]
+function Blog_Damage(damage)
+    
+    -- Damage threshold colors
+    local color = Blog_Default_Color
+
+    local damage_string
+    if (damage == 0) then
+        damage_string = Format_String('MISS!', 6, c_red)
+    else
+        damage_string = Format_Number(damage, 6)
+    end
+    
+    return damage_string
+end
+
+function Blog_Action(action_name)
+
+    -- SC Colors
+    -- Ability Colors
+    -- Nuke Colors
+
+    return Format_String(action_name, 15)
+end
+
+--[[
+    DESCRIPTION:    Format the TP string for the battle log.
+    PARAMETERS :
+        tp_value: How much TP was used by the weaponskill
+]]
+function Blog_TP(tp_value)
+
+    -- TP threshold colors
+
+    if tp_value then
+        return '('..Format_Number(tp_value, 5, nil, nil, nil, true)..')'
+    else
+        return ''
+    end
+
 end
 
 --[[
@@ -60,36 +126,4 @@ function Count_Log_Elements()
     end
     
     return count
-end
-
---[[
-    DESCRIPTION:    Sets the color of the entire message line.
-]]
-function Message_Line_Color(line_color, player_name)
-    
-    if not line_color then
-        if Is_Me(player_name) then
-            return c_bright_green
-        else
-            return c_white
-        end
-    else
-        return line_color
-    end
-
-end
-
---[[
-    DESCRIPTION:    Format the TP string for the battle log.
-    PARAMETERS :
-        tp_value: How much TP was used by the weaponskill
-]]
-function Message_TP_String(tp_value)
-    
-    if tp_value then
-        return '('..Format_Number(tp_value, 5)..')'
-    else
-        return ''
-    end
-
 end

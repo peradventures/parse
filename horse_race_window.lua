@@ -1,60 +1,67 @@
+Horse_Race_Window, Horse_Race_Content = build_hud_box(500, 50, nil, 9, 50)
+Texts.stroke_width(Horse_Race_Window, 3)
+
+Show_Horse           = true
+Compact_Mode         = true
+Show_Crit            = true
+Show_Total_Acc       = false
+Include_SC_Damage    = false
+Show_Percent         = false
+Combine_Damage_Types = false
+Show_Healing         = false
+Top_Rank_Default     = 6
+Top_Rank             = Top_Rank_Default
+
 --[[
-    DESCRIPTION:    Builds the UI for the horse race parser
+    DESCRIPTION:    Refreshes the parser on the screen.
 ]] 
-function horse_race() 
-    local name
+function Refresh_Horse_Race()
+    Horse_Race()
+    Horse_Race_Window:update(Horse_Race_Content)
+    if Show_Horse then Horse_Race_Window:show() else Horse_Race_Window:hide() end              
+end
+
+--[[
+    DESCRIPTION:    Turn the Horse Race on or off (visually).
+]]
+function Toggle_Horse_Race()
+    Show_Horse = not Show_Horse
+    Refresh_Horse_Race() 
+    windower.add_to_chat(c_chat, 'Horse Race visibility is now: '..tostring(Show_Horse))
+end
+
+--[[
+    DESCRIPTION:    Populates horse race parser.
+]] 
+function Horse_Race()
     local party = windower.ffxi.get_party()
+    if not party then return end
 
-    sort_damage()
+    -- Populate Total_Damage_Race to put the highest damage on top
+    Sort_Damage()
 
-    -- local pt1_count = party.party1_count - 1
-    -- local pt2_count = party.party2_count - 1
-    -- local pt3_count = party.party3_count - 1
-    local total_dmg, party_damage
+    -- Iniitialize the horse race window. It will be blank until someone does damage
+    Horse_Race_Data = {}
+    Horse_Race_Header()
 
-    parse_layout = {}
-    horse_race_header()
-
-    party_damage = total_pt_damage(party)
-
-    for i, v in ipairs(total_damage_race) do
-        name = v[1]
-        if i <= top_rank then horse_race_rows(i, name, party_damage) end
+    -- Populate the horse race window with data from the top [x] players
+    local party_damage = Total_Party_Damage(party)
+    local player_name
+    for i, v in ipairs(Total_Damage_Race) do
+        player_name = v[1]
+        if i <= Top_Rank then Horse_Race_Rows(i, player_name, party_damage) end
     end
 
-    -- -- Party 1
-    -- for i = 0, pt1_count, 1 do
-    --     name = party[pt[i]].name     
-    --     horse_race_rows(name, party_damage)
-    -- end
-
-    -- -- Party 2
-    -- if show_alliance then
-    --     for i = 0, pt2_count, 1 do
-    --         name = party[pt2[i]].name
-    --         horse_race_rows(name, party_damage)
-    --     end
-    -- end
-
-    -- -- Party 3
-    -- if show_alliance then
-    --     for i = 0, pt3_count, 1 do
-    --         name = party[pt3[i]].name
-    --         horse_race_rows(name, party_damage)
-    --     end
-    -- end
-    horse_content.modestates = concat_strings(parse_layout)
-
+    Horse_Race_Content.modestates = concat_strings(Horse_Race_Data)
 end
 
 --[[
     DESCRIPTION:    Builds the header for the horse race window.
 ]] 
-function horse_race_header()
-    local header
+function Horse_Race_Header()
     
     local cols
-    if compact_mode then cols = Column_Widths_Compact
+    if Compact_Mode then cols = Column_Widths_Compact
     else cols = Column_Widths end
 
     local name_col  = cols['name']
@@ -63,54 +70,48 @@ function horse_race_header()
 
     local filter
     if Mob_Filter then filter = Mob_Filter else filter = 'All' end
-    table.insert(parse_layout, 'Mob Filter: '..filter)
+    table.insert(Horse_Race_Data, 'Mob Filter: '..filter)
 
-    header = 'R   '..String_Length('Name', name_col)
+    local header = 'R   '..String_Length('Name', name_col)
     
-    -- Total % column can be toggled on and off
-    if show_percent then
-        header = header..String_Length('T%',   small_col, true)
-    end
+    -- Total Damage %
+    if Show_Percent then header = header..String_Length('T%',   small_col, true) end
     
+    -- Total Damage Amount (Raw)
     header = header..String_Length('T#',   dmg_col,   true)
     
-    -- Accuracy can be toggled between total accuracy or recent accuracy
+    -- Accuracy for total run vs. accuracy over the last [X] hits
     if Show_Total_Acc then
         header = header..String_Length('A-T%', small_col, true)
     else
         header = header..String_Length('A50%', small_col, true)
     end
     
-    -- Crits can be toggled on and off
-    if Show_Crit then
-        header = header..String_Length('Crit', small_col, true)
-    end
+    -- Critical Hit %
+    if Show_Crit then header = header..String_Length('Crit', small_col, true) end
 
     -- Can just show total damage or break out each of the damage types
-    if not combine_damage_types then
-        header = header..String_Length('Melee', dmg_col, true)
-    end
+    if (not Combine_Damage_Types) then header = header..String_Length('Melee', dmg_col, true) end
 
+    -- Weaponskill Damage
     header = header..String_Length('WS', dmg_col, true)
     
-    -- Skillchain damage can be toggled on and off
-    if Include_SC_Damage then 
-        header = header..String_Length('SC', dmg_col, true)
-    end
+    -- Skillchain Damage
+    if Include_SC_Damage then header = header..String_Length('SC', dmg_col, true) end
     
-    -- Can just show total damage or break out each of the damage types
-    if not combine_damage_types then
+    -- Ranged, Magic, and Job Ability Damage
+    if not Combine_Damage_Types then
         header = header..String_Length('Ranged', dmg_col, true)
         header = header..String_Length('Magic',   dmg_col,   true)
         header = header..String_Length('JA',  dmg_col,   true)
     end
 
-    -- Healing can be toggled on and off
-    if show_healing then
+    -- Healing
+    if Show_Healing then
         header = header..String_Length('Heals',  dmg_col,   true)
     end
     
-    table.insert(parse_layout, header)
+    table.insert(Horse_Race_Data, header)
 end
 
 --[[
@@ -119,46 +120,44 @@ end
     	actor			Primary node
     	party_damage 	Total damage from party / alliance
 ]] 
-function horse_race_rows(rank, player_name, party_damage)
-    local row
-    
+function Horse_Race_Rows(rank, player_name, party_damage)
     local cols
-    if compact_mode then cols = Column_Widths_Compact
+    if Compact_Mode then cols = Column_Widths_Compact
     else cols = Column_Widths end
 
     local name_col  = cols['name']
     local dmg_col   = cols['dmg']
     local small_col = cols['small']
 
-    -- Skillchain damage can be toggled on and off
+    -- Skillchain damage can be included in the grand total or not
     local grand_total
     if Include_SC_Damage then 
-        grand_total = get_data(player_name, 'total',        'total')
+        grand_total = Get_Data(player_name, 'total',        'total')
     else
-        grand_total = get_data(player_name, 'total_no_sc',  'total')
+        grand_total = Get_Data(player_name, 'total_no_sc',  'total')
     end
 
-    local melee_total    = get_data(player_name, 'melee',   'total')
-    local ws_total       = get_data(player_name, 'ws',      'total')
-    local sc_total       = get_data(player_name, 'sc',      'total')
-    local range_total    = get_data(player_name, 'ranged',  'total')
-    local magic_total    = get_data(player_name, 'magic',   'total')
-    local ability_total  = get_data(player_name, 'ability', 'total')
-    local healing_total  = get_data(player_name, 'healing', 'total')
+    local melee_total    = Get_Data(player_name, 'melee',   'total')
+    local ws_total       = Get_Data(player_name, 'ws',      'total')
+    local sc_total       = Get_Data(player_name, 'sc',      'total')
+    local range_total    = Get_Data(player_name, 'ranged',  'total')
+    local magic_total    = Get_Data(player_name, 'magic',   'total')
+    local ability_total  = Get_Data(player_name, 'ability', 'total')
+    local healing_total  = Get_Data(player_name, 'healing', 'total')
     local accuracy_flow  = tally_running_acc(player_name)
     --if melee_heal then healing_total = healing_total + get_player_node(actor, 'melee', 'mob_heal') end
 
     
-    local count = get_data(player_name, 'melee', 'count')
+    local count = Get_Data(player_name, 'melee', 'count')
 
-    local color 
+    local color
     if Is_Me(player_name, true) then color = c_bright_green
     else color  = c_white end 
 
-    row =      color..rank..'.  '..String_Length(player_name, name_col)
+    local row = color..rank..'.  '..String_Length(player_name, name_col)
     
     -- Total % column can be toggled on and off
-    if show_percent then
+    if Show_Percent then
         row = row..String_Length(Remove_Zero(get_percent(grand_total, party_damage)), small_col, true)
     end
 
@@ -166,7 +165,7 @@ function horse_race_rows(rank, player_name, party_damage)
     
     -- Accuracy can be toggled between total accuracy or recent accuracy
     if Show_Total_Acc then
-        local hits  = get_data(player_name, 'melee', 'hits')
+        local hits  = Get_Data(player_name, 'melee', 'hits')
         row = row..String_Length(Remove_Zero(get_percent(hits,  count)), small_col, true)
     else
         row = row..String_Length(accuracy_flow, small_col, true)
@@ -174,12 +173,12 @@ function horse_race_rows(rank, player_name, party_damage)
     
     -- Crits can be toggled on and off
     if Show_Crit then 
-        local crits = get_data(player_name, 'melee', 'crits')
+        local crits = Get_Data(player_name, 'melee', 'crits')
         row = row..String_Length(Remove_Zero(get_percent(crits, count)), small_col, true)
     end
     
     -- Can just show total damage or break out each of the damage types
-    if not combine_damage_types then
+    if not Combine_Damage_Types then
         row = row..Format_Number(melee_total,   dmg_col)
     end
 
@@ -191,18 +190,18 @@ function horse_race_rows(rank, player_name, party_damage)
     end
 
     -- Can just show total damage or break out each of the damage types
-    if not combine_damage_types then
+    if not Combine_Damage_Types then
         row = row..Format_Number(range_total, dmg_col)
         row = row..Format_Number(magic_total,   dmg_col)
         row = row..Format_Number(ability_total, dmg_col)
     end
     
     -- Healing can be toggled on and off
-    if show_healing then
+    if Show_Healing then
         row = row..Format_Number(healing_total, dmg_col)
     end
 
     row = row..c_white
 
-    table.insert(parse_layout, row)
+    table.insert(Horse_Race_Data, row)
 end

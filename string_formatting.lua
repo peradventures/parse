@@ -1,7 +1,7 @@
 --[[
     DESCRIPTION:    Create a nicely formatted string.
     PARAMETERS :
-        -- align:   Default alignment is to the left
+        align:   Default alignment is to the left
 ]]
 function Format_String(str, length, color, line_color, align)
     local display_string
@@ -19,13 +19,14 @@ end
 --[[
     DESCRIPTION:    Create a nicely formatted number string.
     PARAMETERS :
-        number    : Original number
-        length    : How long the formatted number string should be
-        color     : Color of the actual number
-        line_color: Color of the rest of the line
-        -- align  : Default alignment is to the right
+        number          : Original number; this should be an actual number and not a string
+        length          : How long the formatted number string should be
+        color           : Color of the actual number
+        line_color      : Color of the rest of the line
+        align           : Default alignment is to the right
+        force_long_form : Force the number to be in long form and ignore the Compact_Mode global
 ]]
-function Format_Number(number, length, color, line_color, align)
+function Format_Number(number, length, color, line_color, align, force_long_form)
     local display_number
     
     -- Default to right aligned
@@ -36,7 +37,7 @@ function Format_Number(number, length, color, line_color, align)
     if not line_color then line_color = c_white end
 
     -- Compact = 2.5M; Regular = 2,500,000
-    if Compact_Mode then
+    if Compact_Mode and (not force_long_form) then
         display_number = String_Length(Compact_Number(number), length, align)
     else
         display_number = String_Length(Add_Comma(Remove_Zero(number)), length, align)

@@ -39,27 +39,30 @@ require('metrics')
 require('party')
 require('handling')
 require('battle_log')
-require('display')
+require('focus_window')
+require('horse_race_window')
+require('packet_handling')
 
-Update_Parser()
-Update_Blog()
+Mob_Filter = nil
+Refresh_Horse_Race()
+Refresh_Blog()
 
-throttle = 10
-count = 0
+Window_Refresh_Throttling = 10
+Window_Refresh_Count = 0
 
 --[[
-    DESCRIPTION: The pre-render function will trigger every time the client does a frame refresh.
-                 So this function is used to drive many other things that need to be checked consistently across time.
+    DESCRIPTION:    The pre-render function will trigger every time the client does a frame refresh.
+                    This function is throttled to improve performance. 
 ]] 
 windower.register_event('prerender', 
 function()
-    -- Throttling
-    count = (count + 1) % throttle
-    if count > 0 then return end
-    Update_Parser()
-    Update_Blog()
+    Window_Refresh_Count = (Window_Refresh_Count + 1) % Window_Refresh_Throttling
+    
+    if Window_Refresh_Count > 0 then return end
+    
+    Refresh_Horse_Race()
+    Refresh_Blog()
 end)
-
 
 --[[
     DESCRIPTION:    Handle the action packet. 
@@ -70,222 +73,29 @@ windower.register_event('action',
 function(act)
     if not act then return end
 
-    local result, target, log_offense
-
-    -- This is the entity that is performing the action
-    local actor = get_entity(act.actor_id)
+    -- This is the entity that is performing the action. It could be a player, mob, or NPC.
+    local actor = Get_Entity_Data(act.actor_id)
     if not actor then return end
     
-    -- Record all offensive actions from entities in party and alliance
-    if actor.is_party or actor.is_alliance then 
-        --initialize_check(actor.name, actor.is_npc)
-        log_offense = true
-    end
-
-    local damage = 0
+    -- Record all offensive actions from players in party or alliance
+    local log_offense = actor.is_party or actor.is_alliance
     
-    -- Melee Attack ///////////////////////////////////////////////////////////////////////////////////////////////
-    if act.category == 1 then
-
-        for i, v in pairs(act.targets) do
-            for n, m in pairs(v.actions) do
-                
-                result = act.targets[i].actions[n]
-                target = get_entity(act.targets[i].id)
-
-                -- Only log damage for party members whether they are NPC or not
-                if log_offense then damage = damage + melee_damage(result, actor.name, target.name) end
-                
-                -- Only log damage taken for party members whether they are NPC or not      -- //////////////////////// IMPLEMENT DEFENSE LATER
-                -- if target.is_party or target.is_alliance then
-                --     initialize_check(actor.name, actor.is_npc, target.name, true)
-                --     handle_defense(result, target.name)                          
-                -- end
-
-            end
-        end
-
-        if show_melee and not actor.is_npc then Add_Message_To_Battle_Log(entity_name, 'Melee', damage) end
-
-    -- Ranged Attack //////////////////////////////////////////////////////////////////////////////////////////////
-    elseif act.category == 2 then
-
-        for i, v in pairs(act.targets) do
-            for n, m in pairs(v.actions) do
-
-                result = act.targets[i].actions[n]
-                target = get_entity(act.targets[i].id)
-
-                -- Only log damage for party members whether they are NPC or not
-                if log_offense then handle_ranged(result, actor.name, target.name) end
-
-            end
-        end
-        
-    -- Finish WS //////////////////////////////////////////////////////////////////////////////////////////////////
-    elseif act.category == 3 then 
-        local sc_id, sc_name
-        local damage     = 0
-        local sc_damage  = 0
-        local skillchain = false
-
-        -- Only log damage for party members whether they are NPC or not
-        if not log_offense then return end
-        
-        local ws_name = get_ws_name(act)
-        if ws_name == 0 then windower.add_to_chat(c_chat, 'Couldn\'t find WS name.') return end
-
-        for i, v in pairs(act.targets) do
-            for n, m in pairs(v.actions) do
-
-                result = act.targets[i].actions[n]
-                target = get_entity(act.targets[i].id)
-
-                -- Check for skillchains
-                local sc_id = result.add_effect_message
-                if sc_id > 0 then 
-                    skillchain = true
-                    sc_name    = skillchains[sc_id]
-                    sc_damage  = sc_damage + skillchain_damage(result, actor.name, target.name, sc_name)
-                end
-
-                -- Need to calculate WS damage here to account for AOE weaponskills
-                damage = damage + weaponskill_damage(result, actor.name, target.name, ws_name)
-            end
-        end 
-
-        update_data('inc', 1, actor.name, target.name, 'ws', 'count')
-        if damage > 0 then
-            update_data('inc', 1, actor.name, target.name, 'ws', 'hits')
-            update_data_single('inc', 1, actor.name, target.name, 'ws', ws_name, 'hits')
-        end
-
-        if not actor.is_npc then 
-            Add_Message_To_Battle_Log(actor.name, ws_name, damage, nil, find_party_member_by_name(actor.name, 'tp'))
-            if skillchain then Add_Message_To_Battle_Log(actor.name, sc_name, sc_damage, nil, nil) end
-        end
-
-    -- Finish Spell Casting ///////////////////////////////////////////////////////////////////////////////////////
-    elseif act.category == 4 then
-
-        for i, v in pairs(act.targets) do
-            for n, m in pairs(v.actions) do
-
-                result = act.targets[i].actions[n]
-                target = get_entity(act.targets[i].id)
-
-                -- Only log damage for party members whether they are NPC or not
-                if log_offense then Handle_Spell(act, result, actor.name, target_name) end
-
-                -- Only log damage taken for party members whether they are NPC or not
-                -- if target.is_party or target.is_alliance then
-                --     initialize_check(actor.name, actor.is_npc, target.name, true)
-                --     handle_spell(act, result, target.name)
-                -- end
-
-            end
-        end 
-
-    -- Finish Item Use ////////////////////////////////////////////////////////////////////////////////////////////
-    elseif act.category == 5 then
-        -- do nothing
-
-    -- Abilities //////////////////////////////////////////////////////////////////////////////////////////////////
-    elseif act.category == 6 then
-
-        --if strat_abils[act.param] and is_me(actor) then use_strat() end ///////////////////////// Count strats used
-
-        if not log_offense then return end
-
-        local ability_name = get_ability_name(act)
-        if not ability_name then windower.add_to_chat(c_chat, 'fce: Ability name not found.') return false end
-        
-        -- Increment the count here to avoid counting for multiple targets.
-        --if not inc_single_count(act, actor.name, 'ability', ability_name) then return end
-
-        for i, v in pairs(act.targets) do
-            for n, m in pairs(v.actions) do
-                result = act.targets[i].actions[n]
-                target = get_entity(act.targets[i].id)
-                handle_ability(act, result, actor.name, target.name)
-            end
-        end
-
-    -- Begin WS ///////////////////////////////////////////////////////////////////////////////////////////////////
-    elseif act.category == 7 then
-        
-        target = get_entity(act.targets[1].id)
-
-    -- Begin Spellcasting /////////////////////////////////////////////////////////////////////////////////////////
-    elseif act.category == 8 then
-        -- Do nothing
-
-    -- Begin item use or interrupt usage //////////////////////////////////////////////////////////////////////////
-    elseif act.category == 9 then
-        -- do nothing
-
-    -- Finish Monster TP move /////////////////////////////////////////////////////////////////////////////////////
-    elseif act.category == 11 then
-
-        -- ///////////////////////////////////////////////////////////// IMPLEMENT THIS LATER
-        -- for i, v in pairs(act.targets) do
-        --     for n, m in pairs(v.actions) do
-
-        --         result = act.targets[i].actions[n]
-        --         target = get_entity(act.targets[i].id)
-        --         if not target then return end
-
-        --         if not target.is_party and not target.is_alliance then return end   -- Don't consider non party/alliance members
-                    
-        --         if not target.is_npc then                                           -- Only track damage taken for PC characters
-        --             initialize_check(actor.name, actor.is_npc, target.name, true)
-        --             mob_ability(act, result, target.name)
-        --         end
-
-        --     end
-        -- end
-
-    -- Begin Ranged Attack ////////////////////////////////////////////////////////////////////////////////////////
-    elseif act.category == 12 then
-        -- do nothing
-
-    -- Pet Ability (SMN/BST) //////////////////////////////////////////////////////////////////////////////////////
-    elseif act.category == 13 then
-
-        -- Influenced by flippant parse
-        local pet_data = windower.ffxi.get_mob_by_id(act.actor_id)
-        local position, member, owner
-
-        -- /////////// Might need to sort over the alliance
-
-        -- Check to see if the pet belongs to anyone in the party.
-        for position, member in pairs(windower.ffxi.get_party()) do
-            if type(member) == 'table' and member.mob then
-                if member.mob.pet_index == pet_data.index then owner = member.mob.name end
-            end
-        end
-
-        local ability_name = get_ability_name(act)
-        if not ability_name then windower.add_to_chat(c_chat, 'fce: Ability name not found.') return false end
-
-        -- Increment the count here to avoid counting for multiple targets.
-        --if not inc_single_count(act, owner, 'ability', ability_name) then return end
-
-        for i, v in pairs(act.targets) do
-            for n, m in pairs(v.actions) do
-                result = act.targets[i].actions[n]
-                target = get_entity(act.targets[i].id)
-                handle_ability(act, result, owner, target.name)
-            end
-        end
-
-    -- Unblinkable Job Ability ////////////////////////////////////////////////////////////////////////////////////
-    elseif act.category == 14 then
-
-    else
-        windower.add_to_chat(c_chat, 'Uncaptured_Category: '..act.category)
-
+    if     act.category ==  1 then Melee_Attack(act, actor, log_offense)
+    elseif act.category ==  2 then Ranged_Attack(act, actor, log_offense)
+    elseif act.category ==  3 then Finish_WS(act, actor, log_offense)
+    elseif act.category ==  4 then Finish_Spell_Casting(act, actor, log_offense)
+    elseif act.category ==  5 then -- Do nothing (Finish Item Use)
+    elseif act.category ==  6 then Job_Ability(act, actor, log_offense)
+    elseif act.category ==  7 then -- Do nothing (Begin WS)
+    elseif act.category ==  8 then -- Do nothing (Begin Spellcasting)
+    elseif act.category ==  9 then -- Do nothing (Begin or Interrupt Item Usage)
+    elseif act.category == 11 then -- Do nothing (Finish Monster TP Move)
+    elseif act.category == 12 then -- Do nothing (Begin Ranged Attack)
+    elseif act.category == 13 then Pet_Ability(act, actor, log_offense)
+    elseif act.category == 14 then -- Do nothing (Unblinkable Job Ability)
+    else   windower.add_to_chat(c_chat, 'Uncaptured_Category: '..act.category) 
     end
+
 end)
 
 --[[
@@ -294,7 +104,7 @@ end)
 windower.register_event('action message',
 function (actor_id, target_id, actor_index, target_index, message_id, param_1, param_2, param_3)
 
-    target = get_entity(target_id)
+    target = Get_Entity_Data(target_id)
 
     -- Effect wears off
     if message_id == 206 then
@@ -316,11 +126,26 @@ function(command, ...)
     if command then
         if command:lower() == 'load' then -- Do nothing
         
-        elseif command:lower() == 'show'     then Toggle_Window_Display(args[1])
-        elseif command:lower() == 'reset'    then 
-            reset_parser() 
-
-        elseif command:lower() == 'alliance' then show_alliance = not show_alliance
+        -- Turn windows on or off
+        elseif command:lower() == 'show' then
+            
+            if args[1]:lower() == 'blog' then
+                Toggle_Blog()
+            elseif args[1]:lower() == 'horse' then
+                Toggle_Horse_Race()
+            elseif args[1]:lower() == 'error' then
+                Show_Error = not Show_Error
+                windower.add_to_chat(c_chat, 'PARSE: Show_Error is now '..Show_Error)
+            elseif args[1]:lower() == 'warning' then
+                Show_Warning = not Show_Warning
+                windower.add_to_chat(c_chat, 'PARSE: Show_Warning is now '..Show_Warning)
+            else
+                windower.add_to_chat(c_chat, 'PARSE: '..tostring(args[1])..' is an unknown window and cannot be toggled.')
+            end
+        
+        -- Reset the parser
+        elseif command:lower() == 'reset' then
+            reset_parser()
 
         -- Commands for the Focus window
         elseif command:lower() == 'focus' then
@@ -347,7 +172,7 @@ function(command, ...)
                 Blog_Type = 'focus' 
                 windower.add_to_chat(c_chat, 'Focusing on '..tostring(args[1])) 
             end
-            Update_Blog()
+            Refresh_Blog()
 
         -- Set the mob filtering
         elseif command:lower() == 'mob' then
@@ -359,23 +184,24 @@ function(command, ...)
         -- Set the Top # Ranking
         elseif command:lower() == 'top' then
             if      args[1] == nil then 
-                top_rank = top_rank_default 
-                windower.add_to_chat(c_chat, 'Setting top ranking limit to '..top_rank_default)
+                Top_Rank = Top_Rank_Default 
+                windower.add_to_chat(c_chat, 'Setting top ranking limit to '..Top_Rank_Default)
             elseif  tonumber(args[1]) == nil then windower.add_to_chat(c_chat, 'Must enter a number.')
-            else    top_rank = tonumber(args[1])
+            else    Top_Rank = tonumber(args[1])
             end
 
         -- Blog functions
-        elseif command:lower() == 'log'      then Blog_Type = 'log'     Update_Blog() windower.add_to_chat(c_chat, 'Focus set to log.')
+        elseif command:lower() == 'log'      then Blog_Type = 'log'     Refresh_Blog() windower.add_to_chat(c_chat, 'Focus set to log.')
        
         -- Horse Race Formatting Functions
+        elseif command:lower() == 'melee'    then Show_Melee           = not Show_Melee
         elseif command:lower() == 'compact'  then Compact_Mode         = not Compact_Mode
         elseif command:lower() == 'crit'     then Show_Crit            = not Show_Crit
         elseif command:lower() == 'acc'      then Show_Total_Acc       = not Show_Total_Acc
         elseif command:lower() == 'sc'       then Include_SC_Damage    = not Include_SC_Damage
-        elseif command:lower() == 'percent'  then show_percent         = not show_percent           -- Total Damage Percent
-        elseif command:lower() == 'combine'  then combine_damage_types = not combine_damage_types
-        elseif command:lower() == 'healing'  then show_healing         = not show_healing
+        elseif command:lower() == 'percent'  then Show_Percent         = not Show_Percent           -- Total Damage Percent
+        elseif command:lower() == 'combine'  then Combine_Damage_Types = not Combine_Damage_Types
+        elseif command:lower() == 'healing'  then Show_Healing         = not Show_Healing
 
         -- Data functions (Not Implemented)
         elseif command:lower() == 'snapshot' then -- Create a snapshot of the currently held data

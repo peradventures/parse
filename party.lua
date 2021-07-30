@@ -1,4 +1,4 @@
-function find_party_member_by_name(name, index)
+function Find_Party_Member_By_Name(name, index)
 	local party = windower.ffxi.get_party()
 	if not party then return false end
 
@@ -33,8 +33,8 @@ end
     ASSUMES    :
         show_alliance
 ]] 
-function total_pt_damage(party)
-    if not party then return end
+function Total_Party_Damage(party)
+    if not party then return 1 end
     
     local total_damage = 0
     local pt1_count = party.party1_count - 1
@@ -46,29 +46,27 @@ function total_pt_damage(party)
         player_name = party[pt[i]].name
         
         local index = build_index(player_name)
-        init_data(index)
-        total_damage = total_damage + get_data(player_name, 'total', 'total')
+        Init_Data(index)
+        total_damage = total_damage + Get_Data(player_name, 'total', 'total')
     end
 
-    --if show_alliance then
-        -- Party 2
-        for i = 0, pt2_count, 1 do
-            player_name = party[pt2[i]].name
-            
-            local index = build_index(player_name)
-            init_data(index)
-            total_damage = total_damage + get_data(player_name, 'total', 'total')
-        end
+    -- Party 2
+    for i = 0, pt2_count, 1 do
+        player_name = party[pt2[i]].name
+        
+        local index = build_index(player_name)
+        Init_Data(index)
+        total_damage = total_damage + Get_Data(player_name, 'total', 'total')
+    end
 
-        -- Party 3
-        for i = 0, pt3_count, 1 do
-            player_name = party[pt3[i]].name
-            
-            local index = build_index(player_name)
-            init_data(index)
-            total_damage = total_damage + get_data(player_name, 'total', 'total')
-        end
-    --end
+    -- Party 3
+    for i = 0, pt3_count, 1 do
+        player_name = party[pt3[i]].name
+        
+        local index = build_index(player_name)
+        Init_Data(index)
+        total_damage = total_damage + Get_Data(player_name, 'total', 'total')
+    end
 
     return total_damage
 end

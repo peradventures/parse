@@ -11,15 +11,15 @@ function focus_player()
 
     focus_layout = {}
      
-    local damage_total   = get_data(player_name, 'total', 'total')   
+    local damage_total   = Get_Data(player_name, 'total', 'total')   
     table.insert(focus_layout, 'Name   : '..player_name..' | Total: '..String_Length(Add_Comma(damage_total), dmg_col))
     table.insert(focus_layout, '-------------------------------------------------------')
     
     -- Melee
 
-    local melee_total          = get_data(player_name, 'melee', 'total')
-    local melee_acc            = get_percent(get_data(player_name, 'melee', 'hits'), get_data(player_name, 'melee', 'count'))
-    local melee_crit_damage    = get_data(player_name, 'melee', 'crit damage')
+    local melee_total          = Get_Data(player_name, 'melee', 'total')
+    local melee_acc            = get_percent(Get_Data(player_name, 'melee', 'hits'), Get_Data(player_name, 'melee', 'count'))
+    local melee_crit_damage    = Get_Data(player_name, 'melee', 'crit damage')
 
     if melee_total > 0 then 
         has_data = true
@@ -40,9 +40,9 @@ function focus_player()
     
     -- Ranged
 
-    local ranged_total         = get_data(player_name, 'ranged', 'total')
-    local ranged_acc           = get_percent(get_data(player_name, 'ranged', 'hits'), get_data(player_name, 'ranged', 'count'))
-    local ranged_crit_damage   = get_data(player_name, 'ranged', 'crit damage') 
+    local ranged_total         = Get_Data(player_name, 'ranged', 'total')
+    local ranged_acc           = get_percent(Get_Data(player_name, 'ranged', 'hits'), Get_Data(player_name, 'ranged', 'count'))
+    local ranged_crit_damage   = Get_Data(player_name, 'ranged', 'crit damage') 
 
     if ranged_total > 0 then
         has_data = true
@@ -63,9 +63,9 @@ function focus_player()
 
     -- Weaponskill / Skillchain
 
-    local ws_total = get_data(player_name, 'ws', 'total')
-    local ws_acc   = get_percent(get_data(player_name, 'ws', 'hits'), get_data(player_name, 'ws', 'count'))
-    local sc_total = get_data(player_name, 'sc', 'total')
+    local ws_total = Get_Data(player_name, 'ws', 'total')
+    local ws_acc   = get_percent(Get_Data(player_name, 'ws', 'hits'), Get_Data(player_name, 'ws', 'count'))
+    local sc_total = Get_Data(player_name, 'sc', 'total')
 
     if ws_total > 0 then
         has_data = true
@@ -86,7 +86,7 @@ function focus_player()
 
     -- Magic
 
-    local magic_total = get_data(player_name, 'magic', 'total')
+    local magic_total = Get_Data(player_name, 'magic', 'total')
 
     if magic_total > 0 then
         has_data = true
@@ -103,7 +103,7 @@ function focus_player()
     
     -- Ability
 
-    local ability_total = get_data(player_name, 'ability', 'total')
+    local ability_total = Get_Data(player_name, 'ability', 'total')
 
     if ability_total > 0 then
         has_data = true
@@ -120,7 +120,7 @@ function focus_player()
 
     -- Healing
 
-    local healing_total = get_data(player_name, 'healing', 'total')
+    local healing_total = Get_Data(player_name, 'healing', 'total')
 
     if healing_total > 0 then
         has_data = true
@@ -163,12 +163,12 @@ function single_data(player_name)
 
     table.insert(focus_layout, header)
 
-    if not skill_data[focus_skill] then return end
-    if not skill_data[focus_skill][player_name] then return end
+    if not Skill_Data[focus_skill] then return end
+    if not Skill_Data[focus_skill][player_name] then return end
 
     sort_single_damage(player_name)
 
-    for i, v in ipairs(single_damage_race) do
+    for i, v in ipairs(Single_Damage_Race) do
         action_name = v[1]
         single_row(player_name, action_name)
     end
