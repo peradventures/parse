@@ -7,8 +7,8 @@ function Format_String(str, length, color, line_color, align)
     local display_string
 
     -- Default coloring
-    if not color then color = c_white end
-    if not line_color then line_color = c_white end
+    if not color then color = C_White end
+    if not line_color then line_color = C_White end
 
     display_string = String_Length(str, length)
     display_string = color..display_string..line_color
@@ -30,14 +30,14 @@ function Format_Number(number, length, color, line_color, align, force_long_form
     local display_number
     
     -- Default to right aligned
-    if not align then align = true end
+    if (not align) then align = true end
 
     -- Default coloring
-    if not color then color = c_white end
-    if not line_color then line_color = c_white end
+    if (not color) then color = C_White end
+    if (not line_color) then line_color = C_White end
 
     -- Compact = 2.5M; Regular = 2,500,000
-    if Compact_Mode and (not force_long_form) then
+    if (Compact_Mode) and (not force_long_form) then
         display_number = String_Length(Compact_Number(number), length, align)
     else
         display_number = String_Length(Add_Comma(Remove_Zero(number)), length, align)
@@ -96,7 +96,7 @@ Default_Length = 15
 ]]
 function String_Length(str, limit, align)
     
-    if not str then str = 'BLANK' end
+    if (not str) then str = 'BLANK' end
     if (not limit) or (limit < 1) then limit = Default_Length end
     
     local string_length = string.len(str)
@@ -125,7 +125,7 @@ end
 ]] 
 function Fill_String(str, fill_length, char, align) 
     
-    if not char then char = ' ' end
+    if (not char) then char = ' ' end
     
     local fill_string   = string.rep(char, fill_length)
     local return_string = str..fill_string

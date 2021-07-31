@@ -23,20 +23,20 @@ stroke_width     = 2
         window      The actual box object
         content     Content to put inside of the box
 ]] 
-function build_hud_box(x, y, font, font_size, alpha, red, blue, green, drag, stroke)
+function Build_Hud_Box(x, y, font, font_size, alpha, red, blue, green, drag, stroke)
     local content = {}
     local box_info = {}
     
-    if x         == nil then x = 0 end
-    if y         == nil then y = 0 end
-    if font      == nil then font = hud_font end
-    if font_size == nil then font_size = hud_font_size end
-    if alpha     == nil then alpha = hud_transparency end
-    if red       == nil then red = 0 end
-    if blue      == nil then blue = 15 end
-    if green     == nil then green = 0 end
-    if drag      == nil then drag = hud_draggable end
-    if stroke    == nil then stroke = stroke_width end
+    if (x         == nil) then x = 0 end
+    if (y         == nil) then y = 0 end
+    if (font      == nil) then font = hud_font end
+    if (font_size == nil) then font_size = hud_font_size end
+    if (alpha     == nil) then alpha = hud_transparency end
+    if (red       == nil) then red = 0 end
+    if (blue      == nil) then blue = 15 end
+    if (green     == nil) then green = 0 end
+    if (drag      == nil) then drag = hud_draggable end
+    if (stroke    == nil) then stroke = stroke_width end
 
     box_info.box = {
         pos     = {x = x, y = y},
@@ -46,7 +46,7 @@ function build_hud_box(x, y, font, font_size, alpha, red, blue, green, drag, str
         padding = 7
     }
     local window = Texts.new(box_info.box)
-    initialize(window)
+    Initialize(window)
     return window, content
 end
 
@@ -56,7 +56,7 @@ end
     PARAMETERS :
         text        Text object (the window)
 ]] 
-function initialize(text)
+function Initialize(text)
     local properties = L{}
     properties:append('${modestates}')
     text:clear()
@@ -69,7 +69,7 @@ end
     PARAMETERS :
         s           Strings in the table.
 ]] 
-function concat_strings(s)
+function Concat_Strings(s)
     local t = { }
     for k,v in ipairs(s) do
         t[#t+1] = tostring(v)

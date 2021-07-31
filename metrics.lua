@@ -118,18 +118,22 @@ end
     PARAMETERS :    
 ]] 
 function Update_Data(mode, value, player_name, target_name, skill, metric)
-	local index = build_index(player_name, target_name)
+	local index = Build_Index(player_name, target_name)
 	Init_Data(index, player_name)
 
 	-- Increment from existing value
-	if mode == 'inc' then
+	if (mode == 'inc') then
 		Inc_Data(value, index, skill, metric)
 	
 	-- Set value directly
-	elseif mode == 'set' then
+	elseif (mode == 'set') then
 		Set_Data(value, index, skill, metric)
 	
-	else windower.add_to_chat(c_chat, 'Invalid mode: '..mode) end
+	else
+		Add_Message_To_Chat('E', 'PARSE | Update_Data^metrics')
+		Add_Message_To_Chat('E', 'Invalid update mode: '..tostring(mode))
+	end
+
 end
 
 --[[
@@ -137,21 +141,24 @@ end
     PARAMETERS :    
 ]] 
 function Update_Data_Single(mode, value, player_name, target_name, skill, action_name, metric)
-	local index = build_index(player_name, target_name)
+	local index = Build_Index(player_name, target_name)
 	Init_Data_Single(index, player_name, skill, action_name)
 
 	-- This holds all of the players who have data.
-	if not Initialized_Players[player_name] then Initialized_Players[player_name] = true end
+	if (not Initialized_Players[player_name]) then Initialized_Players[player_name] = true end
 
 	-- Increment from existing value
-	if mode == 'inc' then
+	if (mode == 'inc') then
 		Inc_Data_Single(value, index, skill, action_name, metric)
 	
 	-- Set value directly
-	elseif mode == 'set' then
+	elseif (mode == 'set') then
 		Set_Data_Single(value, index, skill, action_name, metric)
 	
-	else windower.add_to_chat(c_chat, 'Invalid mode: '..mode) end
+	else
+		Add_Message_To_Chat('E', 'PARSE | Update_Data_Single^metrics')
+		Add_Message_To_Chat('E', 'Invalid update mode: '..tostring(mode))
+	end
 
 	-- This is used for the focus window
 	Skill_Data[skill][player_name][action_name] = true
@@ -190,14 +197,15 @@ end
 function Get_Data(player_name, skill, metric)
 	local total = 0
 
-	for index, value in pairs(Parse_Data) do
-		-- If there is no mob filter then get everything associated with this player.
-		if not Mob_Filter then
+	for index, _ in pairs(Parse_Data) do
+		
+		-- If there is no mob filter then get everything associated with this player
+		if (not Mob_Filter) then
 			if string.find(index, player_name) then
 				total = total + Parse_Data[index][skill][metric]
 			end
 		
-		-- Otherwise get everything for this specific mob. Partial matches count.
+		-- Otherwise get everything for this specific mob. Partial matches count
 		else
 			if string.find(index, player_name..":"..Mob_Filter) then
 				total = total + Parse_Data[index][skill][metric]
@@ -212,19 +220,21 @@ end
     DESCRIPTION:    
     PARAMETERS :    
 ]] 
-function get_data_single(player_name, skill, action_name, metric)
+function Get_Data_Single(player_name, skill, action_name, metric)
 	local value = 0
 
 	for index, v in pairs(Parse_Data) do
 		
-		if not Mob_Filter then
+		-- If there is no mob filter then get everything associated with this player
+		if (not Mob_Filter) then
 			if string.find(index, player_name) then 
-				value = get_data_single_calculation(value, index, skill, action_name, metric)
+				value = Get_Data_Single_Calculation(value, index, skill, action_name, metric)
 			end
-
+		
+		-- Otherwise get everything for this specific mob. Partial matches count
 		else
 			if string.find(index, player_name..":"..Mob_Filter) then
-				value = get_data_single_calculation(value, index, skill, action_name, metric)
+				value = Get_Data_Single_Calculation(value, index, skill, action_name, metric)
 			end
 		end
 
@@ -237,12 +247,14 @@ end
     DESCRIPTION:    
     PARAMETERS :    
 ]] 
-function get_data_single_calculation(value, index, skill, action_name, metric)
-	if Parse_Data[index][skill]['single'][action_name] then
-		if     metric == 'min' then value = get_data_single_min_calculation(value, index, skill, action_name, metric)
-		elseif metric == 'max' then value = get_data_single_max_calculation(value, index, skill, action_name, metric)
-		else 					    value = value + Parse_Data[index][skill]['single'][action_name][metric] end
+function Get_Data_Single_Calculation(value, index, skill, action_name, metric)
+	
+	if (Parse_Data[index][skill]['single'][action_name]) then
+		if     (metric == 'min') then value = Get_Data_Single_Min_Calculation(value, index, skill, action_name, metric)
+		elseif (metric == 'max') then value = Get_Data_Single_Max_Calculation(value, index, skill, action_name, metric)
+		else 					      value = value + Parse_Data[index][skill]['single'][action_name][metric] end
 	end
+	
 	return value
 end
 
@@ -250,10 +262,12 @@ end
     DESCRIPTION:    
     PARAMETERS :    
 ]] 
-function get_data_single_min_calculation(min, index, skill, action_name, metric)
-	if min <= Parse_Data[index][skill]['single'][action_name][metric] then
-		min = Parse_Data[index][skill]['single'][action_name][metric]
+function Get_Data_Single_Min_Calculation(min, index, skill, action_name, metric)
+	
+	if (min <= Parse_Data[index][skill]['single'][action_name][metric]) then
+	   	min =  Parse_Data[index][skill]['single'][action_name][metric]
 	end
+	
 	return min
 end
 
@@ -261,10 +275,12 @@ end
     DESCRIPTION:    
     PARAMETERS :    
 ]] 
-function get_data_single_max_calculation(max, index, skill, action_name, metric)
-	if Parse_Data[index][skill]['single'][action_name][metric] > max then
+function Get_Data_Single_Max_Calculation(max, index, skill, action_name, metric)
+	
+	if (Parse_Data[index][skill]['single'][action_name][metric] > max) then
 		max = Parse_Data[index][skill]['single'][action_name][metric]
 	end
+	
 	return max
 end
 
@@ -278,7 +294,7 @@ end
     DESCRIPTION:    
     PARAMETERS :    
 ]] 
-function reset_parser()
+function Reset_Parser()
 	Parse_Data = {}
 	Skill_Data = {}
 	Initialized_Players = {}
@@ -289,8 +305,9 @@ end
     DESCRIPTION:    
     PARAMETERS :    
 ]] 
-function build_index(player_name, target_name)
-	if not target_name then target_name = 'test' end
+function Build_Index(player_name, target_name)
+	if (not target_name) then target_name = 'test' end
+	
 	return player_name..':'..target_name
 end
 
@@ -303,29 +320,29 @@ end
         action_name Name of the WS or SC
 ]] 
 function Single_Damage(player_name, target_name, skill, damage, action_name)
-    local index = build_index(player_name, target_name)
+    local index = Build_Index(player_name, target_name)
     Init_Data_Single(index, player_name, skill, action_name)
 
-    if skill ~= 'healing' then 
+    if (skill ~= 'healing') then
     	Update_Data('inc', damage, player_name, target_name, 'total', 'total') 
     	Update_Data('inc', damage, player_name, target_name, 'total_no_sc', 'total')
     end
     
     -- Overall Data
     Update_Data('inc', damage, player_name, target_name, skill, 'total')
-    if damage < Get_Data(player_name, skill, 'min') then Update_Data('set', damage, player_name, target_name, skill, 'min') end
-    if damage > Get_Data(player_name, skill, 'max') then Update_Data('set', damage, player_name, target_name, skill, 'max') end
+    if (damage < Get_Data(player_name, skill, 'min')) then Update_Data('set', damage, player_name, target_name, skill, 'min') end
+    if (damage > Get_Data(player_name, skill, 'max')) then Update_Data('set', damage, player_name, target_name, skill, 'max') end
 
     -- Single Data
     Update_Data_Single('inc', damage, player_name, target_name, skill, action_name, 'total')
     Update_Data_Single('inc', 1,      player_name, target_name, skill, action_name, 'count')
-    -- 'hits' gets incremented in parse.lua to handle AOEs.
+    -- 'hits' gets incremented in parse.lua to handle AOEs
 
-    if damage < get_data_single(player_name, skill, action_name, 'min') then 
+    if (damage < Get_Data_Single(player_name, skill, action_name, 'min')) then
     	Update_Data_Single('set', damage, player_name, target_name, skill, action_name, 'min')
     end
     
-    if damage > get_data_single(player_name, skill, action_name, 'max') then 
+    if (damage > Get_Data_Single(player_name, skill, action_name, 'max')) then
     	Update_Data_Single('set', damage, player_name, target_name, skill, action_name, 'max')
     end
 end
@@ -340,30 +357,31 @@ end
     DESCRIPTION:    
     PARAMETERS :    
 ]] 
-function running_acc(player_name, hit)
-	if not Running_Accuracy_Data[player_name] then return end
+function Running_Accuracy(player_name, hit)
+	if (not Running_Accuracy_Data[player_name]) then return end
 
-	local max = table.maxn(Running_Accuracy_Data[player_name])
-    if max >= Running_Accuracy_Limit then table.remove(Running_Accuracy_Data[player_name], Running_Accuracy_Limit) end
-    table.insert(Running_Accuracy_Data[player_name], 1, hit)
+	local max = Count_Table_Elements(Running_Accuracy_Data[player_name])
+    if (max >= Running_Accuracy_Limit) then table.remove(Running_Accuracy_Data[player_name], Running_Accuracy_Limit) end
+    
+	table.insert(Running_Accuracy_Data[player_name], 1, hit)
 end
 
 --[[
     DESCRIPTION:    
     PARAMETERS :    
 ]] 
-function tally_running_acc(player_name)
-	if not Running_Accuracy_Data[player_name] then return 0 end
+function Tally_Running_Accuracy(player_name)
+	if (not Running_Accuracy_Data[player_name]) then return 0 end
 
 	local hits = 0
 	local count = 0
 
-	for index, value in pairs(Running_Accuracy_Data[player_name]) do
-		if value then hits = hits + 1 end
+	for _, value in pairs(Running_Accuracy_Data[player_name]) do
+		if (value) then hits = hits + 1 end
 		count = count + 1
 	end
 
-	return get_percent(hits, count)
+	return Format_Percent(hits, count)
 end
 
 -- ******************************************************************************************************
@@ -381,7 +399,7 @@ function Sort_Damage()
 	table.sort(Total_Damage_Race, function (a, b)
 		local a_damage = a[2]
 		local b_damage = b[2]
-		return a_damage > b_damage 
+		return (a_damage > b_damage)
 	end)
 end
 
@@ -391,7 +409,8 @@ end
 ]] 
 function Populate_Total_Damage_Table()
 	Total_Damage_Race = {}
-	for index, v in pairs(Initialized_Players) do
+	
+	for index, _ in pairs(Initialized_Players) do
 		table.insert(Total_Damage_Race, {index, Get_Data(index, 'total', 'total')})
 	end
 end
@@ -400,12 +419,13 @@ end
     DESCRIPTION:    
     PARAMETERS :    
 ]] 
-function sort_single_damage(player_name)
-	populate_single_damage_table(player_name)
+function Sort_Single_Damage(player_name)
+	Populate_Single_Damage_Table(player_name)
+	
 	table.sort(Single_Damage_Race, function (a, b)
 		local a_damage = a[2]
 		local b_damage = b[2]
-		return a_damage > b_damage 
+		return (a_damage > b_damage) 
 	end)
 end
 
@@ -413,9 +433,10 @@ end
     DESCRIPTION:    
     PARAMETERS :    
 ]] 
-function populate_single_damage_table(player_name)
+function Populate_Single_Damage_Table(player_name)
 	Single_Damage_Race = {}
-	for action_name, z in pairs(Skill_Data[focus_skill][player_name]) do
-		table.insert(Single_Damage_Race, {action_name, get_data_single(player_name, focus_skill, action_name, 'total')})
+	
+	for action_name, _ in pairs(Skill_Data[Focus_Skill][player_name]) do
+		table.insert(Single_Damage_Race, {action_name, Get_Data_Single(player_name, Focus_Skill, action_name, 'total')})
 	end
 end

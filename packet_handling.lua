@@ -16,7 +16,7 @@ function Melee_Attack(act, actor, log_offense)
 
             -- Only log damage for party members whether they are NPC or not
             -- WHY DO I HAVE DAMAGE = DAMAGE + ???
-            if log_offense then damage = damage + melee_damage(result, actor.name, target.name) end
+            if log_offense then damage = damage + Melee_Damage(result, actor.name, target.name) end
             
             -- IMPLEMENT DEFENSE LATER
             -- Only log damage taken for party members whether they are NPC or not      
@@ -183,7 +183,7 @@ function Pet_Ability(act, actor, log_offense)
 
     local ability_name = Get_Ability_Name(act)
     if (not ability_name) then
-        windower.add_to_chat(c_chat, 'fce: Ability name not found.')
+        windower.add_to_chat(C_Chat, 'fce: Ability name not found.')
         return false
     end
 

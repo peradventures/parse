@@ -24,7 +24,7 @@
    		reaction 				8: Hit; Consistently on MNK vs Apex bats
    								9: Miss?; Very rarely on MNK vs Apex bats
 ]] 
-function melee_damage(result, player_name, target_name)
+function Melee_Damage(result, player_name, target_name)
     local animation_id = result.animation
     local damage = result.param
     local throwing = false
@@ -35,54 +35,58 @@ function melee_damage(result, player_name, target_name)
     -- MELEE ------------------------------------------------------------------
 
     -- Main Hand
-    if animation_id == 0 then
+    if (animation_id == 0) then
         Update_Data('inc', damage, player_name, target_name, 'melee',         'total')
         Update_Data('inc', damage, player_name, target_name, 'melee primary', 'total')
 
     -- Off Hand
-    elseif animation_id == 1 then
+    elseif (animation_id == 1) then
         Update_Data('inc', damage, player_name, target_name, 'melee',           'total')
         Update_Data('inc', damage, player_name, target_name, 'melee secondary', 'total')
 
     -- Kicks
-    elseif animation_id == 2 or animation_id == 3 then 
+    elseif (animation_id == 2) or (animation_id == 3) then
         Update_Data('inc', damage, player_name, target_name, 'melee',       'total')
         Update_Data('inc', damage, player_name, target_name, 'melee kicks', 'total')
 
     -- RANGED -----------------------------------------------------------------
 
     -- Throwing
-    elseif animation_id == 4 then
+    elseif (animation_id == 4) then
         throwing = true
         Update_Data('inc', damage, player_name, target_name, 'ranged',   'total')
         Update_Data('inc', damage, player_name, target_name, 'throwing', 'total')
 
-    else windower.add_to_chat(c_chat, 'Parse: Unhandled animation in melee_damage: '..tostring(animation_id)) end
+    else 
+        Add_Message_To_Chat('W', 'PARSE | Melee_Damage^handling')
+        Add_Message_To_Chat('W', 'Unhandled animation: '..tostring(animation_id))
+    end
 
     -- MIN/MAX ----------------------------------------------------------------
 
     if throwing then
         Update_Data('inc', 1, player_name, target_name, 'ranged', 'count')
-        if damage < Get_Data(player_name, 'ranged', 'min') then Update_Data('set', damage, player_name, target_name, 'ranged', 'min') end
-        if damage > Get_Data(player_name, 'ranged', 'max') then Update_Data('set', damage, player_name, target_name, 'ranged', 'max') end
+        if (damage < Get_Data(player_name, 'ranged', 'min')) then Update_Data('set', damage, player_name, target_name, 'ranged', 'min') end
+        if (damage > Get_Data(player_name, 'ranged', 'max')) then Update_Data('set', damage, player_name, target_name, 'ranged', 'max') end
     else
         Update_Data('inc', 1, player_name, target_name, 'melee', 'count')
-        if damage < Get_Data(player_name, 'melee', 'min') then Update_Data('set', damage, player_name, target_name, 'melee', 'min') end
-        if damage > Get_Data(player_name, 'melee', 'max') then Update_Data('set', damage, player_name, target_name, 'melee', 'max') end
+        if (damage < Get_Data(player_name, 'melee', 'min')) then Update_Data('set', damage, player_name, target_name, 'melee', 'min') end
+        if (damage > Get_Data(player_name, 'melee', 'max')) then Update_Data('set', damage, player_name, target_name, 'melee', 'max') end
     end
 
     -- ENSPELL ----------------------------------------------------------------
     
     local enspell_damage = result.add_effect_param 
 
-    if enspell_damage > 0 then 
+    if (enspell_damage > 0) then
 
         -- Element of the enspell is in add_effect_animation
         Update_Data('inc', enspell_damage, player_name, target_name, 'magic',   'total')
         Update_Data('inc', enspell_damage, player_name, target_name, 'enspell', 'total')
         Update_Data('inc', 1, player_name, target_name, 'magic', 'count')
-        if enspell_damage < Get_Data(player_name, 'magic', 'min') then Update_Data('set', enspell_damage, player_name, target_name, 'magic', 'min') end
-        if enspell_damage > Get_Data(player_name, 'magic', 'max') then Update_Data('set', enspell_damage, player_name, target_name, 'magic', 'max') end
+        if (enspell_damage < Get_Data(player_name, 'magic', 'min')) then Update_Data('set', enspell_damage, player_name, target_name, 'magic', 'min') end
+        if (enspell_damage > Get_Data(player_name, 'magic', 'max')) then Update_Data('set', enspell_damage, player_name, target_name, 'magic', 'max') end
+
     end
 
     -- NUANCE -----------------------------------------------------------------
@@ -90,68 +94,71 @@ function melee_damage(result, player_name, target_name)
     local message_id = result.message
 
     -- Hit
-    if message_id == 1 then 
+    if (message_id == 1) then 
         Update_Data('inc', 1, player_name, target_name, 'melee', 'hits')
-        running_acc(player_name, true)
+        Running_Accuracy(player_name, true)
     
     -- Healing with melee attacks
-    elseif message_id == 3 or message_id == 373 then
+    elseif (message_id == 3) or (message_id == 373) then
         Update_Data('inc', 1,      player_name, target_name, 'melee', 'hits')
         Update_Data('inc', damage, player_name, target_name, 'melee', 'mob heal')
 
     -- Misses
-    elseif message_id == 15 then 
+    elseif (message_id == 15) then 
         Update_Data('inc', 1, player_name, target_name, 'melee', 'misses')
-        running_acc(player_name, false)
+        Running_Accuracy(player_name, false)
 
     -- DRK vs. Omen Gorger
-    elseif message_id == 30 then
-        windower.add_to_chat(c_chat, 'Attack nuance 30')
+    elseif (message_id == 30) then
+        Add_Message_To_Chat('W', 'PARSE | Melee_Damage^handling')
+        Add_Message_To_Chat(nil, 'Attack Nuance 30 -- DRK vs. Omen Gorger')
 
     -- Attack absorbed by shadows
-    elseif message_id == 31 then
+    elseif (message_id == 31) then
         Update_Data('inc', 1, player_name, target_name, 'melee', 'hits')
         Update_Data('inc', 1, player_name, target_name, 'melee', 'shadows')
     
     -- Attack dodged (Perfect Dodge) / Remove the count so perfect dodge doesn't count.
-    elseif message_id == 32 then
+    elseif (message_id == 32) then
         Update_Data('inc', -1, player_name, target_name, 'melee', 'count')
 
     -- Critical Hits
-    elseif message_id == 67 then 
+    elseif (message_id == 67) then 
         Update_Data('inc', 1,      player_name, target_name, 'melee', 'hits')
         Update_Data('inc', 1,      player_name, target_name, 'melee', 'crits')
         Update_Data('inc', damage, player_name, target_name, 'melee', 'crit damage')
-        running_acc(player_name, true)
+        Running_Accuracy(player_name, true)
 
     -- Throwing Critical Hit
-    elseif message_id == 353 then
+    elseif (message_id == 353) then
         Update_Data('inc', 1,      player_name, target_name, 'ranged', 'hits')
         Update_Data('inc', 1,      player_name, target_name, 'ranged', 'crits')
         Update_Data('inc', damage, player_name, target_name, 'ranged', 'crit damage')
-        running_acc(player_name, true)
+        Running_Accuracy(player_name, true)
         
     -- Throwing Miss
-    elseif message_id == 354 then
+    elseif (message_id == 354) then
         Update_Data('inc', 1, player_name, target_name, 'ranged', 'misses')
-        running_acc(player_name, false)
+        Running_Accuracy(player_name, false)
 
     -- Throwing Square Hit
-    elseif message_id == 576 then
+    elseif (message_id == 576) then
         Update_Data('inc', 1, player_name, target_name, 'ranged', 'hits')
-        running_acc(player_name, true)
+        Running_Accuracy(player_name, true)
 
     -- Throwing Truestrike
-    elseif message_id == 577 then
+    elseif (message_id == 577) then
         Update_Data('inc', 1, player_name, target_name, 'ranged', 'hits')
-        running_acc(player_name, true)
+        Running_Accuracy(player_name, true)
   
-    else Add_Message_To_Battle_Log(player_name, 'Att. nuance '..message_id) end
+    else 
+        Add_Message_To_Battle_Log(player_name, 'Att. nuance '..message_id) end
 
     -----------------------------------------------------------------------
 
     local spikes = result.spike_effect_effect 
-    --windower.add_to_chat(c_chat, 'Unhandled spike effect '..tostring(spikes))
+    --Add_Message_To_Chat('W', 'PARSE | Melee_Damage^handling')
+    --Add_Message_To_Chat(nil, 'Unhandled spike effect '..tostring(spikes))
 
     return damage
 end
@@ -177,41 +184,46 @@ function Handle_Ranged(result, player_name, target_name)
     Update_Data('inc', 1,      player_name, target_name, 'ranged', 'count')
 
     -- Miss /////////////////////////////////////////////////////////
-    if message_id == 354 then 
+    if (message_id == 354) then 
     	Update_Data('inc', 1, player_name, target_name, 'ranged', 'misses')
     	return
 
     -- Shadows //////////////////////////////////////////////////////
-    elseif message_id == 31 then
+    elseif (message_id == 31) then
         Update_Data('inc', 1, player_name, target_name, 'ranged', 'hits')
         Update_Data('inc', 1, player_name, target_name, 'ranged', 'shadows')
         return
 
     -- Regular Hit //////////////////////////////////////////////////
-    elseif message_id == 352 then
+    elseif (message_id == 352) then
         Update_Data('inc', 1,      player_name, target_name, 'ranged', 'hits')
         Update_Data('inc', damage, player_name, target_name, 'ranged', 'total')
 
     -- Square Hit ///////////////////////////////////////////////////
-    elseif message_id == 576 then
+    elseif (message_id == 576) then
         Update_Data('inc', 1,      player_name, target_name, 'ranged', 'hits')
         Update_Data('inc', damage, player_name, target_name, 'ranged', 'total')
 
     -- Truestrike ///////////////////////////////////////////////////
-    elseif message_id == 577 then
+    elseif (message_id == 577) then
         Update_Data('inc', 1,      player_name, target_name, 'ranged', 'hits')
         Update_Data('inc', damage, player_name, target_name, 'ranged', 'total')
 
     -- Crit /////////////////////////////////////////////////////////
-    elseif message_id == 353 then
+    elseif (message_id == 353) then
         Update_Data('inc', 1, player_name, target_name, 'ranged', 'hits')
         Update_Data('inc', 1, player_name, target_name, 'ranged', 'crits')
         Update_Data('inc', damage, player_name, target_name, 'ranged', 'crit damage')
         Update_Data('inc', damage, player_name, target_name, 'ranged', 'total')
 
-    else Add_Message_To_Battle_Log(player_name, 'Ranged nuance '..message_id) end
+    else
+        Add_Message_To_Battle_Log(player_name, 'Ranged nuance '..message_id) end
 
-    if (damage == 0) then windower.add_to_chat(c_chat, 'Ranged damage was 0') end
+    if (damage == 0) then 
+        Add_Message_To_Chat('W', 'PARSE | Handle_Ranged^handling')
+        Add_Message_To_Chat('W', 'Ranged damage was 0.')
+    end
+    
     if (damage < Get_Data(player_name, 'ranged', 'min')) then Update_Data('set', damage, player_name, target_name, 'ranged', 'min') end
     if (damage > Get_Data(player_name, 'ranged', 'max')) then Update_Data('set', damage, player_name, target_name, 'ranged', 'max') end
 
@@ -263,9 +275,9 @@ function Handle_Spell(act, result, player_name, target_name)
     local spell_id = act.param
     local spell = Res.spells[spell_id]
 
-    if (not spell) and (Show_Error) then
-        windower.add_to_chat(c_chat, 'PARSE | Handle_Spell^handling')
-        windower.add_to_chat(c_chat, 'Couldn\'t find spell ID '..tostring(spell_id)..' in spells for '..player_name)
+    if (not spell) then
+        Add_Message_To_Chat('E', 'PARSE | Handle_Spell^handling')
+        Add_Message_To_Chat('E', 'Couldn\'t find spell ID '..tostring(spell_id)..' in spells for '..player_name)
         return
     end
 
@@ -273,23 +285,23 @@ function Handle_Spell(act, result, player_name, target_name)
     local damage = result.param
     local spell_mapped
 
-    if Damage_Spell_List[spell_id] then
+    if (Damage_Spell_List[spell_id]) then
         Single_Damage(player_name, target_name, 'magic', damage, spell_name)
         spell_mapped = true
 
         -- Update the battle log
-        Add_Message_To_Battle_Log(player_name, spell_name, damage)
+        Add_Message_To_Battle_Log(player_name, spell_name, damage, nil, nil, 'spell', spell)
     end
 
     -- TO DO: Handle Overcure
-    if Healing_Spell_List[spell_id] then
+    if (Healing_Spell_List[spell_id]) then
     	Single_Damage(player_name, target_name, 'healing', damage, spell_name)
         spell_mapped = true
     end
 
-    if (not spell_mapped) and (Show_Warning) then
-        windower.add_to_chat(c_chat, 'PARSE | Handle_Spell^handling')
-        windower.add_to_chat(c_chat, spell_name..' is not included in Damage Spells global.')
+    if (not spell_mapped) then
+        Add_Message_To_Chat('W', 'PARSE | Handle_Spell^handling')
+        Add_Message_To_Chat('W', tostring(spell_name)..' is not included in Damage_Spells global.')
     end
 end
 
@@ -308,17 +320,20 @@ end
 ]] 
 function Handle_Ability(act, result, player_name, target_name)
     local ability_id = act.param
+    local ability = Res.job_abilities[ability_id]
     local ability_name = Get_Ability_Name(act)
     local damage = result.param
 
-    if damage_abilities[ability_id] then
+    if (Damage_Ability_List[ability_id]) then
 
         if (damage > 0) then
             Update_Data('inc', damage, player_name, target_name, 'total', 'total')
             Update_Data('inc', damage, player_name, target_name, 'total_no_sc', 'total')
             Update_Data('inc', 1, player_name, target_name, 'ability', 'hits')
+            
             Single_Damage(player_name, target_name, 'ability', damage, ability_name)
-            Add_Message_To_Battle_Log(player_name, ability_name, damage, nil, nil)
+            
+            Add_Message_To_Battle_Log(player_name, ability_name, damage, nil, nil, 'ability', ability)
         end
 
     end

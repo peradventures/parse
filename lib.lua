@@ -1,5 +1,5 @@
-initialized = {}
-offense     = {}
+Errors_Suppressed = 0
+Warnings_Suppressed = 0
 
 Column_Widths = {
     ['name']   = 15,
@@ -21,11 +21,11 @@ Column_Widths_Compact = {
         entity_id   ID of the entity.
     RETURNS    :    Table containing discrete data about the entity.
 ]] 
-function Get_Entity_Data(entity_id) 
-    if entity_id == nil then return end
+function Get_Entity_Data(entity_id)
+    if (entity_id == nil) then return end
 
     local entity = windower.ffxi.get_mob_by_id(entity_id)
-    if entity == nil then return end
+    if (entity == nil) then return end
 
     local entity_data = {}
     entity_data['name']        = entity.name
@@ -48,7 +48,7 @@ function Is_Me(string)
     local player = windower.ffxi.get_player()
     
     -- Run-time error prevention
-    if not player then return false end
+    if (not player) then return false end
 
     local match = false
     if (player.name == string) then match = true end
@@ -65,32 +65,34 @@ end
     ASSUMES    : 
         percent     Toggled via command.
 ]] 
-function get_percent(num, denom)
+function Format_Percent(num, denom)
     
     if (denom == 0) then return 0 end
 
     local p = (num / denom) * 100
-    if (p == 0) then return 0
-    else return string.format("%5.1f", p) end
-
-end
-
-function count_array_elements(array)
-    local count = 0
-    for _ in pairs(array) do
-        count = count + 1
+    
+    if (p == 0) then 
+        return 0
+    else
+        return string.format("%5.1f", p)
     end
-    return count
+
 end
 
-function build_arg_string(args)
-    local arg_count = count_array_elements(args)
+--[[
+    DESCRIPTION:
+    PARAMETERS :
+]] 
+function Build_Arg_String(args)
+    local arg_count = Count_Table_Elements(args)
     local arg_string = ""
     local space = ""
+    
     for i = 1, arg_count, 1 do
-        if i == 1 then space = "" else space = " " end
+        if (i == 1) then space = "" else space = " " end
         arg_string = arg_string..space..args[i]
     end
+    
     return arg_string
 end
 
@@ -109,8 +111,8 @@ function Get_WS_Name(act)
     
     -- If WS_Filter didn't have it either then we need to throw an error.
     if (not ws) and (Show_Error) then 
-        windower.add_to_chat(c_chat, 'PARSE: Get_WS_Name')
-        windower.add_to_chat(c_chat, 'Add WS ID'..tostring(act.param)..' WS_Filter.')
+        Add_Message_To_Chat('E', 'PARSE: Get_WS_Name^lib')
+        Add_Message_To_Chat('E', 'Add WS ID'..tostring(act.param)..' to WS_Filter.')
         return 0
     end
 
@@ -118,14 +120,15 @@ function Get_WS_Name(act)
     
     -- If we don't have a weaponskill name at this point then something is messed up.
     if (ws_name == nil) and (Show_Error) then 
-        windower.add_to_chat(c_chat, 'PARSE: Get_WS_Name')
-        windower.add_to_chat(c_chat, tostring(ws.id)..' needs a name in weapon_skills.lua or WS_Filter.')
+        Add_Message_To_Chat('E', 'PARSE: Get_WS_Name^lib')
+        Add_Message_To_Chat('E', tostring(ws.id)..' needs a name in weapon_skills.lua or WS_Filter.')
+        return 0
     end
 
     -- For some reason jumps get treated as weaponskills
-    if     ws_name == "Gale Axe"      then ws_name = "Jump"         -- 66
-    elseif ws_name == "Avalanche Axe" then ws_name = "High Jump"    -- 67
-    elseif ws_name == "Spinning Axe"  then ws_name = "Super Jump"   -- 68
+    if     (ws_name == "Gale Axe")      then ws_name = "Jump"         -- 66
+    elseif (ws_name == "Avalanche Axe") then ws_name = "High Jump"    -- 67
+    elseif (ws_name == "Spinning Axe")  then ws_name = "Super Jump"   -- 68
     end
 
     return ws_name
@@ -141,10 +144,48 @@ function Get_Ability_Name(act)
     local ability_object = Res.job_abilities[ability_id]
     
     if (not ability_object) and (Show_Error) then
-        windower.add_to_chat(c_chat, 'PARSE | Get_Ability_Name^lib')
-        windower.add_to_chat(c_chat, 'Can\'t find ability '..tostring(ability_id)) 
+        Add_Message_To_Chat('E', 'PARSE | Get_Ability_Name^lib')
+        Add_Message_To_Chat('E', 'Can\'t find ability '..tostring(ability_id)) 
         return nil
     end
     
     return ability_object.en
+end
+
+-- message_string needs to be formatted to string ahead of time.
+function Add_Message_To_Chat(message_type, message_string)
+    local show_message = true
+
+    -- Error
+    if (message_type:lower() == 'e') then
+        
+        if (not Show_Error) then
+            show_message = false
+            Errors_Suppressed = Errors_Suppressed + 1
+        end
+
+    -- Warning
+    elseif (message_type:lower() == 'w') then
+        
+        if (not Show_Warning) then
+            show_message = false
+            Warnings_Suppressed = Warnings_Suppressed + 1
+        end
+
+    end
+
+    if show_message then windower.add_to_chat(C_Chat, message_string) end
+end
+
+--[[
+    DESCRIPTION:    Count the number of elements in the battle log.
+]]
+function Count_Table_Elements(table)
+    local count = 0
+    
+    for i, v in ipairs(table) do
+        count = count + 1
+    end
+    
+    return count
 end
