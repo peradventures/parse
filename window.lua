@@ -1,11 +1,11 @@
-use_UI           = true
-hud_x_pos        = 1275
-hud_y_pos        = 315
-hud_draggable    = true
-hud_font         = 'Consolas'
-hud_font_size    = 10
-hud_transparency = 225 -- a value of 0 (invisible) to 255 (no transparency at all)
-stroke_width     = 2
+Use_UI           = true
+Hud_X_Pos        = 1275
+Hud_Y_Pos        = 315
+Hud_Draggable    = true
+Hud_Font         = 'Consolas'
+Hud_Font_Size    = 10
+Hud_Transparency = 225 -- a value of 0 (invisible) to 255 (no transparency at all)
+Stroke_Width     = 2
 
 --[[
     DESCRIPTION:    Creates a text object.
@@ -29,14 +29,14 @@ function Build_Hud_Box(x, y, font, font_size, alpha, red, blue, green, drag, str
     
     if (x         == nil) then x = 0 end
     if (y         == nil) then y = 0 end
-    if (font      == nil) then font = hud_font end
-    if (font_size == nil) then font_size = hud_font_size end
-    if (alpha     == nil) then alpha = hud_transparency end
+    if (font      == nil) then font = Hud_Font end
+    if (font_size == nil) then font_size = Hud_Font_Size end
+    if (alpha     == nil) then alpha = Hud_Transparency end
     if (red       == nil) then red = 0 end
     if (blue      == nil) then blue = 15 end
     if (green     == nil) then green = 0 end
-    if (drag      == nil) then drag = hud_draggable end
-    if (stroke    == nil) then stroke = stroke_width end
+    if (drag      == nil) then drag = Hud_Draggable end
+    if (stroke    == nil) then stroke = Stroke_Width end
 
     box_info.box = {
         pos     = {x = x, y = y},

@@ -28,7 +28,7 @@ function Toggle_Horse_Race()
     Show_Horse = not Show_Horse
     Refresh_Horse_Race() 
     Add_Message_To_Chat('W', 'PARSE | Toggle_Horse_Race^horse_race_window')
-    Add_Message_To_Chat(nil, 'Horse Race visibility is now: '..tostring(Show_Horse))
+    Add_Message_To_Chat('A', 'Horse Race visibility is now: '..tostring(Show_Horse))
 end
 
 --[[
@@ -162,7 +162,7 @@ function Horse_Race_Rows(rank, player_name, party_damage)
         row = row..String_Length(Remove_Zero(Format_Percent(grand_total, party_damage)), small_col, true)
     end
 
-    row = row..Format_Number(grand_total,   dmg_col)
+    row = row..Format_Number(grand_total, dmg_col)
     
     -- Accuracy can be toggled between total accuracy or recent accuracy
     if Show_Total_Acc then
@@ -180,10 +180,10 @@ function Horse_Race_Rows(rank, player_name, party_damage)
     
     -- Can just show total damage or break out each of the damage types
     if not Combine_Damage_Types then
-        row = row..Format_Number(melee_total,   dmg_col)
+        row = row..Format_Number(melee_total, dmg_col)
     end
 
-    row = row..Format_Number(ws_total,      dmg_col)
+    row = row..Format_Number(ws_total, dmg_col)
     
     -- Skillchain damage can be toggled on and off
     if Include_SC_Damage then 
@@ -193,7 +193,7 @@ function Horse_Race_Rows(rank, player_name, party_damage)
     -- Can just show total damage or break out each of the damage types
     if not Combine_Damage_Types then
         row = row..Format_Number(range_total, dmg_col)
-        row = row..Format_Number(magic_total,   dmg_col)
+        row = row..Format_Number(magic_total, dmg_col)
         row = row..Format_Number(ability_total, dmg_col)
     end
     

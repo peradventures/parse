@@ -33,7 +33,7 @@ function Toggle_Blog()
     Show_Blog  = not Show_Blog  
     Refresh_Blog()
     Add_Message_To_Chat('W', 'PARSE | Toggle_Blog^battle_log')
-    Add_Message_To_Chat(nil, 'Battle Log visibility is now: ' ..tostring(Show_Blog))
+    Add_Message_To_Chat('A', 'Battle Log visibility is now: ' ..tostring(Show_Blog))
 end
 
 --[[
@@ -57,7 +57,7 @@ function Add_Message_To_Battle_Log(player_name, action_name, damage, line_color,
     local tp_value    = Blog_TP(tp_value)
 
     -- Need the space at the beginning to keep the color cut off glitch from happening.
-    table.insert(Blog, 1, ' '..player_name..' '..damage..' '..action_name..' '..tp_value..Blog_Default_Color)
+    table.insert(Blog, 1, ' '..tostring(player_name)..' '..tostring(damage)..' '..tostring(action_name)..' '..tostring(tp_value)..Blog_Default_Color)
     
     Refresh_Blog()
 end
@@ -81,17 +81,20 @@ function Blog_Damage(damage)
     -- Damage threshold colors
     local color = Blog_Default_Color
 
-    local damage_string
-    if (damage == 0) then
-        damage_string = Format_String('MISS!', 6, C_Red)
-    elseif (damage >= 10000) then
-        damage_string = Format_Number(damage, 6, C_Orange)
-    elseif (damage >= 30000) then
-        damage_string = Format_Number(damage, 6, C_Yellow)
-    elseif (damage >= 50000) then
-        damage_string = Format_Number(damage, 6, C_Green)
+    local damage_string Format_Number(0, 6)
+    
+    if (not damage) then
+        -- Do nothing
     elseif (damage >= 70000) then
         damage_string = Format_Number(damage, 6, C_Bright_Green)
+    elseif (damage >= 50000) then
+        damage_string = Format_Number(damage, 6, C_Green)
+    elseif (damage >= 30000) then
+        damage_string = Format_Number(damage, 6, C_Yellow)
+    elseif (damage >= 10000) then
+        damage_string = Format_Number(damage, 6, C_Orange)
+    elseif (damage == 0) then
+        damage_string = Format_String(' MISS!', 6, C_Red)
     else
         damage_string = Format_Number(damage, 6)
     end
@@ -102,7 +105,7 @@ end
 function Blog_Action(action_name, action_type, action_data) 
     local color = C_White
 
-    if (action_type == 'spell') or (action_type == 'ability') then
+    if (action_type == 'spell') or (action_type == 'ability') or (action_type == 'ws') then
         color = Elemental_Coloring(action_data)
     end
 

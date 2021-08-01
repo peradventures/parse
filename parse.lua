@@ -78,7 +78,7 @@ function(act)
     if (not actor) then return end
     
     -- Record all offensive actions from players in party or alliance
-    local log_offense = actor.is_party or actor.is_alliance
+    local log_offense = (actor.is_party or actor.is_alliance)
     
     if     (act.category ==  1) then Melee_Attack(act, actor, log_offense)
     elseif (act.category ==  2) then Ranged_Attack(act, actor, log_offense)
@@ -137,14 +137,14 @@ function(command, ...)
             elseif (args[1]:lower() == 'error') then
                 Show_Error = not Show_Error
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-                Add_Message_To_Chat(nil, 'Show_Error is now '..tostring(Show_Error))
+                Add_Message_To_Chat('A', 'Show_Error is now '..tostring(Show_Error))
             elseif (args[1]:lower() == 'warning') then
                 Show_Warning = not Show_Warning
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-                Add_Message_To_Chat(nil, 'Show_Warning is now '..tostring(Show_Warning))
+                Add_Message_To_Chat('A', 'Show_Warning is now '..tostring(Show_Warning))
             else
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-                Add_Message_To_Chat(nil, tostring(args[1])..' is an unknown window and cannot be toggled.')
+                Add_Message_To_Chat('A', tostring(args[1])..' is an unknown window and cannot be toggled.')
             end
         
         -- Reset the parser
@@ -157,32 +157,32 @@ function(command, ...)
             if     (args[1] == nil)  then
                 Blog_Type = 'log' 
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-                Add_Message_To_Chat(nil, 'Switching back to the battle log.')
+                Add_Message_To_Chat('A', 'Switching back to the battle log.')
             elseif (args[1]:lower() == 'ws') then
                 Focus_Skill = 'ws'
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-                Add_Message_To_Chat(nil, 'Focus type set to: Weaponskill')
+                Add_Message_To_Chat('A', 'Focus type set to: Weaponskill')
             elseif (args[1]:lower() == 'sc') then
                 Focus_Skill = 'sc'
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-                Add_Message_To_Chat(nil, 'Focus type set to: Skillchain')
+                Add_Message_To_Chat('A', 'Focus type set to: Skillchain')
             elseif (args[1]:lower() == 'ability') then
                 Focus_Skill = 'ability'
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-                Add_Message_To_Chat(nil, 'Focus type set to: Ability')
+                Add_Message_To_Chat('A', 'Focus type set to: Ability')
             elseif (args[1]:lower() == 'healing') then
                 Focus_Skill = 'healing'
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-                Add_Message_To_Chat(nil, 'Focus type set to: Healing')
+                Add_Message_To_Chat('A', 'Focus type set to: Healing')
             elseif (args[1]:lower() == 'magic') then
                 Focus_Skill = 'magic'
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-                Add_Message_To_Chat(nil, 'Focus type set to: Magic')
+                Add_Message_To_Chat('A', 'Focus type set to: Magic')
             else 
                 Focus_Entity = args[1]
                 Blog_Type = 'focus'
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-                Add_Message_To_Chat(nil, 'Focusing on '..tostring(args[1]))
+                Add_Message_To_Chat('A', 'Focusing on '..tostring(args[1]))
             end
             
             Refresh_Blog()
@@ -193,11 +193,11 @@ function(command, ...)
             if (args[1] == nil) then
                 Mob_Filter = nil
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-                Add_Message_To_Chat(nil, 'Mob filter cleared.')
+                Add_Message_To_Chat('A', 'Mob filter cleared.')
             else
                 Mob_Filter = Build_Arg_String(args)
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-                Add_Message_To_Chat(nil, 'Mob filter set to '..Mob_Filter)
+                Add_Message_To_Chat('A', 'Mob filter set to '..Mob_Filter)
             end
 
         -- Set the Top # Ranking
@@ -206,11 +206,11 @@ function(command, ...)
             if (args[1] == nil) then
                 Top_Rank = Top_Rank_Default
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-                Add_Message_To_Chat(nil, 'Setting top ranking limit to the default: '..tostring(Top_Rank_Default))
+                Add_Message_To_Chat('A', 'Setting top ranking limit to the default: '..tostring(Top_Rank_Default))
             else
                 Top_Rank = tonumber(args[1])
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-                Add_Message_To_Chat(nil, 'Setting top ranking limit to: '..args[1])
+                Add_Message_To_Chat('A', 'Setting top ranking limit to: '..args[1])
             end
 
         -- Blog functions
@@ -231,6 +231,6 @@ function(command, ...)
         
         else
             Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
-            Add_Message_To_Chat(nil, 'Hud command not recognized. Command: '..command) end
+            Add_Message_To_Chat('A', 'Hud command not recognized. Command: '..command) end
     end
 end)

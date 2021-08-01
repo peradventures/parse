@@ -111,7 +111,7 @@ function Melee_Damage(result, player_name, target_name)
     -- DRK vs. Omen Gorger
     elseif (message_id == 30) then
         Add_Message_To_Chat('W', 'PARSE | Melee_Damage^handling')
-        Add_Message_To_Chat(nil, 'Attack Nuance 30 -- DRK vs. Omen Gorger')
+        Add_Message_To_Chat('A', 'Attack Nuance 30 -- DRK vs. Omen Gorger')
 
     -- Attack absorbed by shadows
     elseif (message_id == 31) then
@@ -198,16 +198,19 @@ function Handle_Ranged(result, player_name, target_name)
     elseif (message_id == 352) then
         Update_Data('inc', 1,      player_name, target_name, 'ranged', 'hits')
         Update_Data('inc', damage, player_name, target_name, 'ranged', 'total')
+        Running_Accuracy(player_name, true)
 
     -- Square Hit ///////////////////////////////////////////////////
     elseif (message_id == 576) then
         Update_Data('inc', 1,      player_name, target_name, 'ranged', 'hits')
         Update_Data('inc', damage, player_name, target_name, 'ranged', 'total')
+        Running_Accuracy(player_name, true)
 
     -- Truestrike ///////////////////////////////////////////////////
     elseif (message_id == 577) then
         Update_Data('inc', 1,      player_name, target_name, 'ranged', 'hits')
         Update_Data('inc', damage, player_name, target_name, 'ranged', 'total')
+        Running_Accuracy(player_name, true)
 
     -- Crit /////////////////////////////////////////////////////////
     elseif (message_id == 353) then
@@ -215,6 +218,7 @@ function Handle_Ranged(result, player_name, target_name)
         Update_Data('inc', 1, player_name, target_name, 'ranged', 'crits')
         Update_Data('inc', damage, player_name, target_name, 'ranged', 'crit damage')
         Update_Data('inc', damage, player_name, target_name, 'ranged', 'total')
+        Running_Accuracy(player_name, true)
 
     else
         Add_Message_To_Battle_Log(player_name, 'Ranged nuance '..message_id) end
@@ -288,9 +292,6 @@ function Handle_Spell(act, result, player_name, target_name)
     if (Damage_Spell_List[spell_id]) then
         Single_Damage(player_name, target_name, 'magic', damage, spell_name)
         spell_mapped = true
-
-        -- Update the battle log
-        Add_Message_To_Battle_Log(player_name, spell_name, damage, nil, nil, 'spell', spell)
     end
 
     -- TO DO: Handle Overcure
@@ -303,6 +304,10 @@ function Handle_Spell(act, result, player_name, target_name)
         Add_Message_To_Chat('W', 'PARSE | Handle_Spell^handling')
         Add_Message_To_Chat('W', tostring(spell_name)..' is not included in Damage_Spells global.')
     end
+
+    if (not damage) then damage = 0 end
+
+    return damage
 end
 
 -- ******************************************************************************************************

@@ -61,12 +61,8 @@ end
     PARAMETERS :
         num         Numerator
         denom       Denominator
-    RETURNS    :    Percent with a format of ###.#
-    ASSUMES    : 
-        percent     Toggled via command.
 ]] 
-function Format_Percent(num, denom)
-    
+function Format_Percent(num, denom, color, line_color)
     if (denom == 0) then return 0 end
 
     local p = (num / denom) * 100
@@ -76,7 +72,6 @@ function Format_Percent(num, denom)
     else
         return string.format("%5.1f", p)
     end
-
 end
 
 --[[
