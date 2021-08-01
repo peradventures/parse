@@ -2,7 +2,7 @@ Blog_Window,  Blog_Content  = Build_Hud_Box(1200, 800, nil, 11, 50)
 Texts.stroke_width(Blog_Window, 3)
 
 Blog = {}
-Blog_Length  = 10
+Blog_Length  = 13
 Show_Blog    = true
 Blog_Type    = 'log'
 Focus_Entity = 'Amarara'

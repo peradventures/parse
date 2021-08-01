@@ -1,16 +1,18 @@
 --[[
     DESCRIPTION:    Create a nicely formatted string.
     PARAMETERS :
-        align:   Default alignment is to the left
 ]]
 function Format_String(str, length, color, line_color, align)
     local display_string
 
     -- Default coloring
-    if not color then color = C_White end
-    if not line_color then line_color = C_White end
+    if (not color) then color = C_White end
+    if (not line_color) then line_color = C_White end
 
-    display_string = String_Length(str, length)
+    display_string = String_Length(str, length, align)
+
+    --Add_Message_To_Chat('A', 'Format_String '..display_string)
+
     display_string = color..display_string..line_color
 
     return display_string

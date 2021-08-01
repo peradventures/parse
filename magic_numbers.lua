@@ -98,7 +98,7 @@ Important_Buffs = {
     [39]  = {id = 39,  name = "Aquaveil",  spell_id = 55,  spell_name = "Aqualveil"},
     [40]  = {id = 40,  name = "Protect",   spell_id = 129, spell_name = "Protectra V"},
     [41]  = {id = 41,  name = "Shell",     spell_id = 134, spell_name = "Shellra V"},
-    [42]  = {id = 42,  name = "Regen", special_handler = function_name},
+    [42]  = {id = 42,  name = "Regen"},
     [43]  = {id = 43,  name = "Refresh"},
     [105] = {id = 105, name = "Barwater",  spell_id = 71,  spell_name = "Barwatera"},
     [113] = {id = 113, name = "Reraise",   spell_id = 848, spell_name = "Reraise IV"},

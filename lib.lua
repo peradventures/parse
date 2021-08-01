@@ -62,16 +62,30 @@ end
         num         Numerator
         denom       Denominator
 ]] 
-function Format_Percent(num, denom, color, line_color)
-    if (denom == 0) then return 0 end
-
-    local p = (num / denom) * 100
+function Format_Percent(num, denom, length, color, line_color)
     
-    if (p == 0) then 
-        return 0
-    else
-        return string.format("%5.1f", p)
+    -- Can't divide by zero
+    if (denom == 0) then
+        return Format_String('0', 5)
     end
+
+    if (not length) then length = 5 end
+    if (not color) then color = C_White end
+    if (not line_color) then line_color = C_White end
+
+    local percent = (num / denom) * 100
+
+    -- Zero should just be zero without any decimal points
+    if (percent == 0) then
+        return Format_String('0', 5)
+    end
+
+    -- Five total characters with one decimal precision (100.0)
+    local percent_string = string.format("%5.1f", percent)
+
+    --Add_Message_To_Chat('A', 'Format_Percent '..color)
+
+    return Format_String(tostring(percent_string), length, color, line_color, true)
 end
 
 --[[
@@ -150,6 +164,8 @@ end
 -- message_string needs to be formatted to string ahead of time.
 function Add_Message_To_Chat(message_type, message_string)
     local show_message = true
+
+    if (not message_type) then message_type = 'A' end
 
     -- Error
     if (message_type:lower() == 'e') then

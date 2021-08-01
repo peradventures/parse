@@ -42,7 +42,7 @@ Initialized_Players = {}
 
 -- Keeps track of the running accuracy data
 Running_Accuracy_Data = {}
-Running_Accuracy_Limit = 50
+Running_Accuracy_Limit = 25
 
 -- Ranks players based on relative total damage done
 Total_Damage_Race  = {}
@@ -370,7 +370,7 @@ end
     DESCRIPTION:    
     PARAMETERS :    
 ]] 
-function Tally_Running_Accuracy(player_name)
+function Tally_Running_Accuracy(player_name, length)
 	if (not Running_Accuracy_Data[player_name]) then return 0 end
 
 	local hits = 0
@@ -381,7 +381,19 @@ function Tally_Running_Accuracy(player_name)
 		count = count + 1
 	end
 
-	return Format_Percent(hits, count)
+	if (count == 0) then count = 1 end
+	local percent = (hits / count) * 100
+
+	local color = C_White
+	if (percent < 60) then
+		color = C_Red
+	elseif (percent < 80) then
+		color = C_Orange
+	elseif (percent < 95) then
+		color = C_Yellow
+	end
+
+	return Format_Percent(hits, count, length, color)
 end
 
 -- ******************************************************************************************************
