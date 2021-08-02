@@ -127,7 +127,13 @@ Damage_Ability_List = {
     [293] = {id = 293, en = "Soul Jump"},
     [550] = {id = 550, en = "Flaming Crush"},
     [598] = {id = 598, en = "Predator Claws"},
-    [613] = {id = 613, en = "Blizzard IV"}
+    [613] = {id = 613, en = "Blizzard IV"},
+    [630] = {id = 630, en = "Chaotic Strike"},
+    [632] = {id = 632, en = "Judgment Bolt"},
+    [634] = {id = 634, en = "Volt Strike"},
+    [960] = {id = 960, en = "Clarsach Call"},
+    [967] = {id = 967, en = "Sonic Buffet"},
+    [970] = {id = 970, en = "Hysteric Assault"}
 }
 
 Healing_Spell_List = {

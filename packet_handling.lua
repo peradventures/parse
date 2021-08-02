@@ -208,7 +208,6 @@ function Pet_Ability(act, actor, log_offense)
 
             result = act.targets[target_index].actions[action_index]
             target = Get_Entity_Data(act.targets[target_index].id)
-            
             Handle_Ability(act, result, owner, target.name)
 
         end

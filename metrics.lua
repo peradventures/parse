@@ -371,7 +371,7 @@ end
     PARAMETERS :    
 ]] 
 function Tally_Running_Accuracy(player_name, length)
-	if (not Running_Accuracy_Data[player_name]) then return 0 end
+	if (not Running_Accuracy_Data[player_name]) then return Format_String('0', length, nil, nil, true) end
 
 	local hits = 0
 	local count = 0

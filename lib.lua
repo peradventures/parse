@@ -63,21 +63,21 @@ end
         denom       Denominator
 ]] 
 function Format_Percent(num, denom, length, color, line_color)
-    
-    -- Can't divide by zero
-    if (denom == 0) then
-        return Format_String('0', 5)
-    end
 
     if (not length) then length = 5 end
     if (not color) then color = C_White end
     if (not line_color) then line_color = C_White end
 
+    -- Can't divide by zero
+    if (denom == 0) then
+        return Format_String('0', length, color, line_color, true)
+    end
+
     local percent = (num / denom) * 100
 
     -- Zero should just be zero without any decimal points
     if (percent == 0) then
-        return Format_String('0', 5)
+        return Format_String('0', length, color, line_color, true)
     end
 
     -- Five total characters with one decimal precision (100.0)
