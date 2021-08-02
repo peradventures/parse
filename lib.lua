@@ -70,14 +70,14 @@ function Format_Percent(num, denom, length, color, line_color)
 
     -- Can't divide by zero
     if (denom == 0) then
-        return Format_String('0', length, color, line_color, true)
+        return Format_String('0', length, line_color, line_color, true)
     end
 
     local percent = (num / denom) * 100
 
     -- Zero should just be zero without any decimal points
     if (percent == 0) then
-        return Format_String('0', length, color, line_color, true)
+        return Format_String('0', length, line_color, line_color, true)
     end
 
     -- Five total characters with one decimal precision (100.0)

@@ -299,6 +299,7 @@ function Reset_Parser()
 	Skill_Data = {}
 	Initialized_Players = {}
 	Blog_Content = {}
+	Refresh_Blog()
 end
 
 --[[
