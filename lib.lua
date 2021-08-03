@@ -43,10 +43,10 @@ end
     PARAMETERS :
         string      Entity data array
     RETURNS    :    TRUE: This is you; FALSE: This is not you
-]] 
+]]
 function Is_Me(string)
     local player = windower.ffxi.get_player()
-    
+
     -- Run-time error prevention
     if (not player) then return false end
 
@@ -61,7 +61,7 @@ end
     PARAMETERS :
         num         Numerator
         denom       Denominator
-]] 
+]]
 function Format_Percent(num, denom, length, color, line_color)
 
     if (not length) then length = 5 end
@@ -83,25 +83,23 @@ function Format_Percent(num, denom, length, color, line_color)
     -- Five total characters with one decimal precision (100.0)
     local percent_string = string.format("%5.1f", percent)
 
-    --Add_Message_To_Chat('A', 'Format_Percent '..color)
-
     return Format_String(tostring(percent_string), length, color, line_color, true)
 end
 
 --[[
     DESCRIPTION:
     PARAMETERS :
-]] 
+]]
 function Build_Arg_String(args)
     local arg_count = Count_Table_Elements(args)
     local arg_string = ""
     local space = ""
-    
+
     for i = 1, arg_count, 1 do
         if (i == 1) then space = "" else space = " " end
         arg_string = arg_string..space..args[i]
     end
-    
+
     return arg_string
 end
 
@@ -109,7 +107,7 @@ end
     DESCRIPTION:    Get the weaponskill name.
     PARAMETERS :
         act         Action packet
-]] 
+]]
 function Get_WS_Name(act)
     local ws = Res.weapon_skills[act.param]
 
@@ -117,18 +115,18 @@ function Get_WS_Name(act)
     if (not ws) then
         ws = WS_Filter[act.param]
     end
-    
+
     -- If WS_Filter didn't have it either then we need to throw an error.
-    if (not ws) and (Show_Error) then 
+    if (not ws) then
         Add_Message_To_Chat('E', 'PARSE: Get_WS_Name^lib')
         Add_Message_To_Chat('E', 'Add WS ID'..tostring(act.param)..' to WS_Filter.')
         return 0
     end
 
     local ws_name = ws.english
-    
+
     -- If we don't have a weaponskill name at this point then something is messed up.
-    if (ws_name == nil) and (Show_Error) then 
+    if (ws_name == nil) then
         Add_Message_To_Chat('E', 'PARSE: Get_WS_Name^lib')
         Add_Message_To_Chat('E', tostring(ws.id)..' needs a name in weapon_skills.lua or WS_Filter.')
         return 0
@@ -147,17 +145,17 @@ end
     DESCRIPTION:    Get the ability name from the Windower job_abilities resource file.
     PARAMETERS :
         act         Action packet
-]] 
+]]
 function Get_Ability_Name(act)
     local ability_id = act.param
     local ability_object = Res.job_abilities[ability_id]
-    
-    if (not ability_object) and (Show_Error) then
+
+    if (not ability_object) then
         Add_Message_To_Chat('E', 'PARSE | Get_Ability_Name^lib')
         Add_Message_To_Chat('E', 'Can\'t find ability '..tostring(ability_id)) 
         return nil
     end
-    
+
     return ability_object.en
 end
 
@@ -169,7 +167,7 @@ function Add_Message_To_Chat(message_type, message_string)
 
     -- Error
     if (message_type:lower() == 'e') then
-        
+
         if (not Show_Error) then
             show_message = false
             Errors_Suppressed = Errors_Suppressed + 1
@@ -177,7 +175,7 @@ function Add_Message_To_Chat(message_type, message_string)
 
     -- Warning
     elseif (message_type:lower() == 'w') then
-        
+
         if (not Show_Warning) then
             show_message = false
             Warnings_Suppressed = Warnings_Suppressed + 1
@@ -193,10 +191,10 @@ end
 ]]
 function Count_Table_Elements(table)
     local count = 0
-    
-    for i, v in ipairs(table) do
+
+    for _, _ in ipairs(table) do
         count = count + 1
     end
-    
+
     return count
 end

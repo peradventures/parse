@@ -102,10 +102,16 @@ function Blog_Damage(damage)
     return damage_string
 end
 
-function Blog_Action(action_name, action_type, action_data) 
+function Blog_Action(action_name, action_type, action_data)
     local color = C_White
 
     if (action_type == 'spell') or (action_type == 'ability') or (action_type == 'ws') then
+
+        if (not action_data) then
+            Add_Message_To_Chat('W', 'PARSE | Blog_Action^battle_log')
+            Add_Message_To_Chat('W', 'action_data is nil for '..action_name)
+        end
+
         color = Elemental_Coloring(action_data)
     end
 
@@ -149,7 +155,9 @@ end
     DESCRIPTION:
 ]]
 function Elemental_Coloring(action_data)
-    local color = Elemental_Colors[action_data.element] or C_White
+    if (not action_data) then return end
+
+    local color = Elemental_Colors[action_data.element]
 
     if (not color) then
         Add_Message_To_Chat('W', 'PARSE | Spell_Coloring^battle_log')

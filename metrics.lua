@@ -326,9 +326,13 @@ function Single_Damage(player_name, target_name, skill, damage, action_name)
 
     if (skill ~= 'healing') then
     	Update_Data('inc', damage, player_name, target_name, 'total', 'total') 
-    	Update_Data('inc', damage, player_name, target_name, 'total_no_sc', 'total')
+
+		if (skill ~= 'sc') then
+			Update_Data('inc', damage, player_name, target_name, 'total_no_sc', 'total')
+		end
+
     end
-    
+
     -- Overall Data
     Update_Data('inc', damage, player_name, target_name, skill, 'total')
     if (damage < Get_Data(player_name, skill, 'min')) then Update_Data('set', damage, player_name, target_name, skill, 'min') end
@@ -342,7 +346,7 @@ function Single_Damage(player_name, target_name, skill, damage, action_name)
     if (damage < Get_Data_Single(player_name, skill, action_name, 'min')) then
     	Update_Data_Single('set', damage, player_name, target_name, skill, action_name, 'min')
     end
-    
+
     if (damage > Get_Data_Single(player_name, skill, action_name, 'max')) then
     	Update_Data_Single('set', damage, player_name, target_name, skill, action_name, 'max')
     end

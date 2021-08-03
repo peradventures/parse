@@ -158,7 +158,7 @@ function Horse_Race_Rows(rank, player_name, party_damage)
     
     -- Total % column can be toggled on and off
     if Show_Percent then
-        row = row..String_Length(Remove_Zero(Format_Percent(grand_total, party_damage)), small_col, true)
+        row = row..Format_Percent(grand_total, party_damage, small_col)
     end
 
     -- Total Damage (Raw)
@@ -167,7 +167,7 @@ function Horse_Race_Rows(rank, player_name, party_damage)
     -- Accuracy can be toggled between total accuracy or recent accuracy
     if Show_Total_Acc then
         local hits  = Get_Data(player_name, 'melee', 'hits')
-        row = row..String_Length(Remove_Zero(Format_Percent(hits,  count)), small_col, true)
+        row = row..Format_Percent(hits, count, small_col)
     else
         row = row..accuracy_flow
     end

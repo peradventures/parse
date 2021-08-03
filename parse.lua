@@ -217,14 +217,17 @@ function(command, ...)
         elseif (command:lower() == 'log')      then Blog_Type = 'log'     Refresh_Blog() windower.add_to_chat(C_Chat, 'Focus set to log.')
        
         -- Horse Race Formatting Functions
-        elseif (command:lower() == 'melee')    then Show_Melee           = not Show_Melee
-        elseif (command:lower() == 'compact')  then Compact_Mode         = not Compact_Mode
-        elseif (command:lower() == 'crit')     then Show_Crit            = not Show_Crit
-        elseif (command:lower() == 'acc')      then Show_Total_Acc       = not Show_Total_Acc
-        elseif (command:lower() == 'sc')       then Include_SC_Damage    = not Include_SC_Damage
-        elseif (command:lower() == 'percent')  then Show_Percent         = not Show_Percent           -- Total Damage Percent
-        elseif (command:lower() == 'combine')  then Combine_Damage_Types = not Combine_Damage_Types
-        elseif (command:lower() == 'healing')  then Show_Healing         = not Show_Healing
+        elseif (command:lower() == 'melee')      then Show_Melee           = not Show_Melee
+        elseif (command:lower() == 'compact')    then Compact_Mode         = not Compact_Mode
+        elseif (command:lower() == 'crit')       then Show_Crit            = not Show_Crit
+        elseif (command:lower() == 'acc')        then Show_Total_Acc       = not Show_Total_Acc
+        elseif (command:lower() == 'sc')         then Include_SC_Damage    = not Include_SC_Damage
+        elseif (command:lower() == 'percent')    then Show_Percent         = not Show_Percent           -- Total Damage Percent
+        elseif (command:lower() == 'combine')    then Combine_Damage_Types = not Combine_Damage_Types
+        elseif (command:lower() == 'healing')    then Show_Healing         = not Show_Healing
+        elseif (command:lower() == 'screenshot') then
+            Show_Crit = true
+            Include_SC_Damage = true
 
         -- Data functions (Not Implemented)
         elseif (command:lower() == 'snapshot') then -- Create a snapshot of the currently held data

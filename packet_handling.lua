@@ -198,18 +198,20 @@ function Pet_Ability(act, actor, log_offense)
         return false
     end
 
-    -- Increment the count here to avoid counting for multiple targets.
-    --if not inc_single_count(act, owner, 'ability', ability_name) then return end
-
     local result, target
+    local damage = 0
 
     for target_index, target_value in pairs(act.targets) do
         for action_index, _ in pairs(target_value.actions) do
 
             result = act.targets[target_index].actions[action_index]
             target = Get_Entity_Data(act.targets[target_index].id)
-            Handle_Ability(act, result, owner, target.name)
+            damage = damage + Handle_Ability(act, result, owner, target.name)
 
         end
+    end
+
+    if (damage > 0) then
+        Update_Data('inc', 1, owner, target.name, 'ability', 'hits')
     end
 end

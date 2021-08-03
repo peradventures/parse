@@ -332,14 +332,11 @@ function Handle_Ability(act, result, player_name, target_name)
     if (Damage_Ability_List[ability_id]) then
 
         if (damage > 0) then
-            Update_Data('inc', damage, player_name, target_name, 'total', 'total')
-            Update_Data('inc', damage, player_name, target_name, 'total_no_sc', 'total')
-            Update_Data('inc', 1, player_name, target_name, 'ability', 'hits')
-            
             Single_Damage(player_name, target_name, 'ability', damage, ability_name)
-            
             Add_Message_To_Battle_Log(player_name, ability_name, damage, nil, nil, 'ability', ability)
         end
 
     end
+
+    return damage
 end
