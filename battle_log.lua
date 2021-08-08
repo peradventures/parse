@@ -1,4 +1,4 @@
-Blog_Window,  Blog_Content  = Build_Hud_Box(1200, 800, nil, 11, 50)
+Blog_Window,  Blog_Content  = Create_Window(30, 475, 11, nil, 50)
 Texts.stroke_width(Blog_Window, 3)
 
 Blog = {}
@@ -13,15 +13,17 @@ Show_Melee   = false
     DESCRIPTION:    Refresh the battle log.
 ]]
 function Refresh_Blog()
-    if Show_Blog then Blog_Window:show() else Blog_Window:hide() end
+    local info = windower.ffxi.get_info()
+
+    if (Show_Blog) then Blog_Window:show() else Blog_Window:hide() end
 
     if Blog_Type == 'log' then
-        Blog_Content.modestates = Concat_Strings(Blog)
+        Blog_Content.token = Concat_Strings(Blog)
         Blog_Window:update(Blog_Content)
 
     else
         Focus_Player()
-        Blog_Content.modestates = Concat_Strings(Focus_Layout)
+        Blog_Content.token = Concat_Strings(Focus_Layout)
         Blog_Window:update(Blog_Content)
     end
 end
@@ -30,7 +32,7 @@ end
     DESCRIPTION:    Turn the Blog on or off (visually).
 ]]
 function Toggle_Blog()
-    Show_Blog  = not Show_Blog  
+    Show_Blog  = not Show_Blog
     Refresh_Blog()
     Add_Message_To_Chat('W', 'PARSE | Toggle_Blog^battle_log')
     Add_Message_To_Chat('A', 'Battle Log visibility is now: ' ..tostring(Show_Blog))

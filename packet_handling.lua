@@ -10,14 +10,14 @@ function Melee_Attack(act, actor, log_offense)
     local damage = 0
     for target_index, target_value in pairs(act.targets) do
         for action_index, _ in pairs(target_value.actions) do
-            
+
             result = act.targets[target_index].actions[action_index]
             target = Get_Entity_Data(act.targets[target_index].id)
 
             -- Only log damage for party members whether they are NPC or not
             -- WHY DO I HAVE DAMAGE = DAMAGE + ???
             if log_offense then damage = damage + Melee_Damage(result, actor.name, target.name) end
-            
+
             -- IMPLEMENT DEFENSE LATER
             -- Only log damage taken for party members whether they are NPC or not      
             -- if target.is_party or target.is_alliance then
@@ -37,9 +37,9 @@ end
 function Ranged_Attack(act, actor, log_offense)
     -- Will need to remove this when implementing defense metrics.
     if (not log_offense) then return end
-    
+
     local result, target
-    
+
     for target_index, target_value in pairs(act.targets) do
         for action_index, _ in pairs(target_value.actions) do
 

@@ -1,4 +1,4 @@
-Horse_Race_Window, Horse_Race_Content = Build_Hud_Box(500, 50, nil, 11, 50)
+Horse_Race_Window, Horse_Race_Content = Create_Window(550, 50, 11, nil, 240)
 Texts.stroke_width(Horse_Race_Window, 3)
 
 Show_Horse           = true
@@ -18,7 +18,10 @@ Top_Rank             = Top_Rank_Default
 function Refresh_Horse_Race()
     Horse_Race()
     Horse_Race_Window:update(Horse_Race_Content)
-    if Show_Horse then Horse_Race_Window:show() else Horse_Race_Window:hide() end              
+
+    local info = windower.ffxi.get_info()
+
+    if (Show_Horse) then Horse_Race_Window:show() else Horse_Race_Window:hide() end              
 end
 
 --[[
@@ -53,7 +56,7 @@ function Horse_Race()
         if i <= Top_Rank then Horse_Race_Rows(i, player_name, party_damage) end
     end
 
-    Horse_Race_Content.modestates = Concat_Strings(Horse_Race_Data)
+    Horse_Race_Content.token = Concat_Strings(Horse_Race_Data)
 end
 
 --[[
@@ -155,7 +158,7 @@ function Horse_Race_Rows(rank, player_name, party_damage)
     else color  = C_White end 
 
     local row = color..rank..'.  '..String_Length(player_name, name_col)
-    
+
     -- Total % column can be toggled on and off
     if Show_Percent then
         row = row..Format_Percent(grand_total, party_damage, small_col)
@@ -163,7 +166,7 @@ function Horse_Race_Rows(rank, player_name, party_damage)
 
     -- Total Damage (Raw)
     row = row..Format_Number(grand_total, dmg_col)
-    
+
     -- Accuracy can be toggled between total accuracy or recent accuracy
     if Show_Total_Acc then
         local hits  = Get_Data(player_name, 'melee', 'hits')
@@ -171,20 +174,20 @@ function Horse_Race_Rows(rank, player_name, party_damage)
     else
         row = row..accuracy_flow
     end
-    
+
     -- Crits can be toggled on and off
-    if Show_Crit then 
+    if Show_Crit then
         local crits = Get_Data(player_name, 'melee', 'crits')
         row = row..Format_Percent(crits, count, small_col)
     end
-    
+
     -- Can just show total damage or break out each of the damage types
     if not Combine_Damage_Types then
         row = row..Format_Number(melee_total, dmg_col)
     end
 
     row = row..Format_Number(ws_total, dmg_col)
-    
+
     -- Skillchain damage can be toggled on and off
     if Include_SC_Damage then 
         row = row..Format_Number(sc_total, dmg_col)
@@ -196,7 +199,7 @@ function Horse_Race_Rows(rank, player_name, party_damage)
         row = row..Format_Number(magic_total, dmg_col)
         row = row..Format_Number(ability_total, dmg_col)
     end
-    
+
     -- Healing can be toggled on and off
     if Show_Healing then
         row = row..Format_Number(healing_total, dmg_col)

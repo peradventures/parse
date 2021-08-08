@@ -198,13 +198,13 @@ function Get_Data(player_name, skill, metric)
 	local total = 0
 
 	for index, _ in pairs(Parse_Data) do
-		
+
 		-- If there is no mob filter then get everything associated with this player
 		if (not Mob_Filter) then
 			if string.find(index, player_name) then
 				total = total + Parse_Data[index][skill][metric]
 			end
-		
+
 		-- Otherwise get everything for this specific mob. Partial matches count
 		else
 			if string.find(index, player_name..":"..Mob_Filter) then
@@ -224,13 +224,13 @@ function Get_Data_Single(player_name, skill, action_name, metric)
 	local value = 0
 
 	for index, v in pairs(Parse_Data) do
-		
+
 		-- If there is no mob filter then get everything associated with this player
 		if (not Mob_Filter) then
 			if string.find(index, player_name) then 
 				value = Get_Data_Single_Calculation(value, index, skill, action_name, metric)
 			end
-		
+
 		-- Otherwise get everything for this specific mob. Partial matches count
 		else
 			if string.find(index, player_name..":"..Mob_Filter) then
@@ -248,13 +248,13 @@ end
     PARAMETERS :    
 ]] 
 function Get_Data_Single_Calculation(value, index, skill, action_name, metric)
-	
+
 	if (Parse_Data[index][skill]['single'][action_name]) then
 		if     (metric == 'min') then value = Get_Data_Single_Min_Calculation(value, index, skill, action_name, metric)
 		elseif (metric == 'max') then value = Get_Data_Single_Max_Calculation(value, index, skill, action_name, metric)
 		else 					      value = value + Parse_Data[index][skill]['single'][action_name][metric] end
 	end
-	
+
 	return value
 end
 
@@ -263,11 +263,11 @@ end
     PARAMETERS :    
 ]] 
 function Get_Data_Single_Min_Calculation(min, index, skill, action_name, metric)
-	
+
 	if (min <= Parse_Data[index][skill]['single'][action_name][metric]) then
 	   	min =  Parse_Data[index][skill]['single'][action_name][metric]
 	end
-	
+
 	return min
 end
 
@@ -276,11 +276,11 @@ end
     PARAMETERS :    
 ]] 
 function Get_Data_Single_Max_Calculation(max, index, skill, action_name, metric)
-	
+
 	if (Parse_Data[index][skill]['single'][action_name][metric] > max) then
 		max = Parse_Data[index][skill]['single'][action_name][metric]
 	end
-	
+
 	return max
 end
 
@@ -293,7 +293,7 @@ end
 --[[
     DESCRIPTION:    
     PARAMETERS :    
-]] 
+]]
 function Reset_Parser()
 	Parse_Data = {}
 	Skill_Data = {}
@@ -308,7 +308,7 @@ end
 ]] 
 function Build_Index(player_name, target_name)
 	if (not target_name) then target_name = 'test' end
-	
+
 	return player_name..':'..target_name
 end
 
@@ -319,7 +319,7 @@ end
         node        Secondary node
         damage      Damage from the WS or SC
         action_name Name of the WS or SC
-]] 
+]]
 function Single_Damage(player_name, target_name, skill, damage, action_name)
     local index = Build_Index(player_name, target_name)
     Init_Data_Single(index, player_name, skill, action_name)
@@ -361,7 +361,7 @@ end
 --[[
     DESCRIPTION:    
     PARAMETERS :    
-]] 
+]]
 function Running_Accuracy(player_name, hit)
 	if (not Running_Accuracy_Data[player_name]) then return end
 
@@ -374,7 +374,7 @@ end
 --[[
     DESCRIPTION:    
     PARAMETERS :    
-]] 
+]]
 function Tally_Running_Accuracy(player_name, length)
 	if (not Running_Accuracy_Data[player_name]) then return Format_String('0', length, nil, nil, true) end
 
@@ -410,7 +410,7 @@ end
 --[[
     DESCRIPTION:    
     PARAMETERS :    
-]] 
+]]
 function Sort_Damage()
 	Populate_Total_Damage_Table()
 	table.sort(Total_Damage_Race, function (a, b)
@@ -423,7 +423,7 @@ end
 --[[
     DESCRIPTION:    
     PARAMETERS :    
-]] 
+]]
 function Populate_Total_Damage_Table()
 	Total_Damage_Race = {}
 	
@@ -435,7 +435,7 @@ end
 --[[
     DESCRIPTION:    
     PARAMETERS :    
-]] 
+]]
 function Sort_Single_Damage(player_name)
 	Populate_Single_Damage_Table(player_name)
 	
@@ -449,10 +449,10 @@ end
 --[[
     DESCRIPTION:    
     PARAMETERS :    
-]] 
+]]
 function Populate_Single_Damage_Table(player_name)
 	Single_Damage_Race = {}
-	
+
 	for action_name, _ in pairs(Skill_Data[Focus_Skill][player_name]) do
 		table.insert(Single_Damage_Race, {action_name, Get_Data_Single(player_name, Focus_Skill, action_name, 'total')})
 	end

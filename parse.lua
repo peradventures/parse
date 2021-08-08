@@ -33,7 +33,7 @@ Packets = require('packets')
 
 require('window')
 require('magic_numbers')
-require('string_formatting')
+require('string_lib')
 require('lib')
 require('metrics')
 require('party')
@@ -44,8 +44,6 @@ require('horse_race_window')
 require('packet_handling')
 
 Mob_Filter = nil
-Refresh_Horse_Race()
-Refresh_Blog()
 
 Window_Refresh_Throttling = 10
 Window_Refresh_Count = 0
@@ -53,13 +51,13 @@ Window_Refresh_Count = 0
 --[[
     DESCRIPTION:    The pre-render function will trigger every time the client does a frame refresh.
                     This function is throttled to improve performance. 
-]] 
+]]
 windower.register_event('prerender', 
 function()
     Window_Refresh_Count = (Window_Refresh_Count + 1) % Window_Refresh_Throttling
-    
+
     if (Window_Refresh_Count > 0) then return end
-    
+
     Refresh_Horse_Race()
     Refresh_Blog()
 end)
@@ -68,7 +66,7 @@ end)
     DESCRIPTION:    Handle the action packet. 
                     Documentation: https://github.com/Windower/Lua/wiki/Action-Event
                     (Documentation gets it right ~97% of the time.)
-]] 
+]]
 windower.register_event('action', 
 function(act)
     if (not act) then return end
@@ -76,10 +74,10 @@ function(act)
     -- This is the entity that is performing the action. It could be a player, mob, or NPC.
     local actor = Get_Entity_Data(act.actor_id)
     if (not actor) then return end
-    
+
     -- Record all offensive actions from players in party or alliance
     local log_offense = (actor.is_party or actor.is_alliance)
-    
+
     if     (act.category ==  1) then Melee_Attack(act, actor, log_offense)
     elseif (act.category ==  2) then Ranged_Attack(act, actor, log_offense)
     elseif (act.category ==  3) then Finish_WS(act, actor, log_offense)
@@ -126,10 +124,10 @@ function(command, ...)
     command = command and command:lower()
     if (command) then
         if command:lower() == 'load' then -- Do nothing
-        
+
         -- Turn windows on or off
         elseif command:lower() == 'show' then
-            
+
             if     (args[1]:lower() == 'blog') then
                 Toggle_Blog()
             elseif (args[1]:lower() == 'horse') then
@@ -146,14 +144,14 @@ function(command, ...)
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
                 Add_Message_To_Chat('A', tostring(args[1])..' is an unknown window and cannot be toggled.')
             end
-        
+
         -- Reset the parser
         elseif (command:lower() == 'reset') then
             Reset_Parser()
 
         -- Commands for the Focus window
         elseif (command:lower() == 'focus') then
-            
+
             if     (args[1] == nil)  then
                 Blog_Type = 'log' 
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
@@ -184,12 +182,12 @@ function(command, ...)
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
                 Add_Message_To_Chat('A', 'Focusing on '..tostring(args[1]))
             end
-            
+ 
             Refresh_Blog()
 
         -- Set the mob filtering
         elseif (command:lower() == 'mob') then
-            
+
             if (args[1] == nil) then
                 Mob_Filter = nil
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
@@ -202,7 +200,7 @@ function(command, ...)
 
         -- Set the Top # Ranking
         elseif (command:lower() == 'top') then
-            
+
             if (args[1] == nil) then
                 Top_Rank = Top_Rank_Default
                 Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
@@ -214,8 +212,8 @@ function(command, ...)
             end
 
         -- Blog functions
-        elseif (command:lower() == 'log')      then Blog_Type = 'log'     Refresh_Blog() windower.add_to_chat(C_Chat, 'Focus set to log.')
-       
+        elseif (command:lower() == 'log') then Blog_Type = 'log'     Refresh_Blog() windower.add_to_chat(C_Chat, 'Focus set to log.')
+
         -- Horse Race Formatting Functions
         elseif (command:lower() == 'melee')      then Show_Melee           = not Show_Melee
         elseif (command:lower() == 'compact')    then Compact_Mode         = not Compact_Mode
@@ -228,10 +226,17 @@ function(command, ...)
         elseif (command:lower() == 'screenshot') then
             Show_Crit = true
             Include_SC_Damage = true
+            Compact_Mode = false
+            Show_Percent = true
+        elseif (command:lower() == 'parse') then
+            Show_Crit = false
+            Include_SC_Damage = false
+            Compact_Mode = true
+            Show_Percent = false
 
         -- Data functions (Not Implemented)
         elseif (command:lower() == 'snapshot') then -- Create a snapshot of the currently held data
-        
+
         else
             Add_Message_To_Chat('W', 'PARSE | Addon Command^parse')
             Add_Message_To_Chat('A', 'Hud command not recognized. Command: '..command) end

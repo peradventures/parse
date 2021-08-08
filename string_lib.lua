@@ -1,3 +1,5 @@
+Default_String_Length = 15
+
 --[[
     DESCRIPTION:    Create a nicely formatted string.
     PARAMETERS :
@@ -10,9 +12,6 @@ function Format_String(str, length, color, line_color, align)
     if (not line_color) then line_color = C_White end
 
     display_string = String_Length(str, length, align)
-
-    --Add_Message_To_Chat('A', 'Format_String '..display_string)
-
     display_string = color..display_string..line_color
 
     return display_string
@@ -30,7 +29,7 @@ end
 ]]
 function Format_Number(number, length, color, line_color, align, force_long_form)
     local display_number
-    
+
     -- Default to right aligned
     if (not align) then align = true end
 
@@ -52,6 +51,36 @@ function Format_Number(number, length, color, line_color, align, force_long_form
 end
 
 --[[
+    DESCRIPTION:    Calculates a percent
+    PARAMETERS :
+        num         Numerator
+        denom       Denominator
+]]
+function Format_Percent(num, denom, length, color, line_color)
+
+    if (not length) then length = 5 end
+    if (not color) then color = C_White end
+    if (not line_color) then line_color = C_White end
+
+    -- Can't divide by zero
+    if (denom == 0) then
+        return Format_String('0', length, line_color, line_color, true)
+    end
+
+    local percent = (num / denom) * 100
+
+    -- Zero should just be zero without any decimal points
+    if (percent == 0) then
+        return Format_String('0', length, line_color, line_color, true)
+    end
+
+    -- Five total characters with one decimal precision (100.0)
+    local percent_string = string.format("%5.1f", percent)
+
+    return Format_String(tostring(percent_string), length, color, line_color, true)
+end
+
+--[[
     DESCRIPTION:
     PARAMETERS :
 ]]
@@ -66,12 +95,12 @@ function Compact_Number(number)
     if (number >= 1000000) then
         display_number = (number / 1000000)
         suffix = 'M'
-    
+
     -- Thousands
     elseif (number >= 1000) then
         display_number = (number / 1000)
         suffix = 'K'
-    
+
     -- No adjustments necessary
     else
         display_number = number
@@ -84,11 +113,10 @@ function Compact_Number(number)
     -- Total length of 5 with one decimal point
     if format then display_number = string.format('%5.1f', display_number) end
     display_number = display_number..suffix
-    
+
     return display_number
 end
 
-Default_Length = 15
 --[[
     DESCRIPTION:    Make a string be a certain length by adding spaces at the beginning or the end.
     PARAMETERS :
@@ -97,22 +125,22 @@ Default_Length = 15
         align : TRUE = Right aligned; FALSE = Left aligned (Default: Left Aligned)
 ]]
 function String_Length(str, limit, align)
-    
+
     if (not str) then str = 'BLANK' end
-    if (not limit) or (limit < 1) then limit = Default_Length end
-    
+    if (not limit) or (limit < 1) then limit = Default_String_Length end
+
     local string_length = string.len(str)
     local arg = '%.'..limit..'s'
 
     -- Truncate if too long
     if (string_length >= limit) then
         str = string.format(arg, str)
-    
+
     -- Add spaces if too short
     else
         local fill_length = limit-string_length
         str = Fill_String(str, fill_length, ' ', align) end
-    
+
     return str
 end
 
@@ -124,16 +152,16 @@ end
         fill_length: How many spaces should be added
         char       : Character to use in the fill string (DEFAULT: ' ')
         align      : TRUE = Right aligned; FALSE = Left aligned (Default: Left Aligned)
-]] 
+]]
 function Fill_String(str, fill_length, char, align) 
-    
+
     if (not char) then char = ' ' end
-    
+
     local fill_string   = string.rep(char, fill_length)
     local return_string = str..fill_string
-    
+
     if align then return_string = fill_string..str end
-    
+
     return return_string
 end
 
@@ -163,11 +191,11 @@ end
 
 --[[
     DESCRIPTION:    Makes zeroes invisible.
-    PARAMETERS :    
+    PARAMETERS :
         number      The number to be checked if it is zero.
 ]] 
 function Remove_Zero(number)
- 
+
     if (number == 0) or (number == 999999) then
         return ' '
     else
