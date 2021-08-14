@@ -34,8 +34,7 @@ end
 function Toggle_Blog()
     Show_Blog  = not Show_Blog
     Refresh_Blog()
-    Add_Message_To_Chat('W', 'PARSE | Toggle_Blog^battle_log')
-    Add_Message_To_Chat('A', 'Battle Log visibility is now: ' ..tostring(Show_Blog))
+    Add_Message_To_Chat('A', 'Toggle_Blog^battle_log', 'Battle Log visibility is now: ' ..tostring(Show_Blog))
 end
 
 --[[
@@ -110,8 +109,7 @@ function Blog_Action(action_name, action_type, action_data)
     if (action_type == 'spell') or (action_type == 'ability') or (action_type == 'ws') then
 
         if (not action_data) then
-            Add_Message_To_Chat('W', 'PARSE | Blog_Action^battle_log')
-            Add_Message_To_Chat('W', 'action_data is nil for '..action_name)
+            Add_Message_To_Chat('W', 'Blog_Action^battle_log', 'action_data is nil for '..action_name)
         end
 
         color = Elemental_Coloring(action_data)
@@ -162,8 +160,7 @@ function Elemental_Coloring(action_data)
     local color = Elemental_Colors[action_data.element]
 
     if (not color) then
-        Add_Message_To_Chat('W', 'PARSE | Spell_Coloring^battle_log')
-        Add_Message_To_Chat('W', 'Unable to map spell coloring for '..action_data.name)
+        Add_Message_To_Chat('W', 'Spell_Coloring^battle_log', 'Unable to map spell coloring for '..action_data.name)
     end
 
     return color

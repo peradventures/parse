@@ -11,11 +11,11 @@ function Focus_Player()
 
     Focus_Layout = {}
     local has_data = false
-     
+
     local total_damage = Get_Data(player_name, 'total', 'total')   
     table.insert(Focus_Layout, 'Name   : '..player_name..' | Total: '..String_Length(Add_Comma(total_damage), dmg_col))
     table.insert(Focus_Layout, '-------------------------------------------------------')
-    
+
     has_data = Focus_Melee(player_name, total_damage)
     has_data = Focus_Ranged(player_name, total_damage)
     has_data = Focus_WS_And_SC(player_name, total_damage)
@@ -44,7 +44,7 @@ function Single_Data(player_name)
     header = String_Length('Name', name_col)
     header = header..String_Length('Total',   dmg_col)
     header = header..String_Length('###',     single_col)
-    header = header..String_Length('Acc',   small_col)
+    header = header..String_Length('Acc',     small_col)
     header = header..String_Length('Average', dmg_col)
     header = header..String_Length('Min',     dmg_col)
     header = header..String_Length('Max',     dmg_col)
@@ -74,7 +74,7 @@ end
 function Focus_Melee(player_name, total_damage)
     local dmg_col   = Column_Widths['dmg']
     local small_col = Column_Widths['small']
-    
+
     local melee_total       = Get_Data(player_name, 'melee', 'total')
     local melee_acc         = Format_Percent(Get_Data(player_name, 'melee', 'hits'), Get_Data(player_name, 'melee', 'count'), small_col)
     local melee_crit_damage = Get_Data(player_name, 'melee', 'crit damage')
@@ -86,7 +86,7 @@ function Focus_Melee(player_name, total_damage)
         local melee_header = String_Length('Melee', dmg_col)..' '..String_Length('% Dmg', small_col)..' '..String_Length('% Acc', small_col)
                              ..' '..String_Length('Crit', dmg_col)..' '..String_Length('% Crt', small_col)
         table.insert(Focus_Layout, melee_header)
-        
+
         local melee_string         = String_Length(Add_Comma(melee_total), dmg_col)
         local melee_percent_string = Format_Percent(melee_total, total_damage, small_col)
         local melee_acc_string     = melee_acc
@@ -94,7 +94,7 @@ function Focus_Melee(player_name, total_damage)
         local melee_crit_percent   = Format_Percent(melee_crit_damage, total_damage, small_col)
         local melee_data = melee_string..' '..melee_percent_string..' '..melee_acc_string..' '..melee_crit_string..' '..melee_crit_percent
         table.insert(Focus_Layout, melee_data) 
-        
+
         table.insert(Focus_Layout, '-------------------------------------------------------')
     end
 
@@ -108,7 +108,7 @@ end
 function Focus_Ranged(player_name, total_damage)
     local dmg_col   = Column_Widths['dmg']
     local small_col = Column_Widths['small']
-    
+
     local ranged_total       = Get_Data(player_name, 'ranged', 'total')
     local ranged_acc         = Format_Percent(Get_Data(player_name, 'ranged', 'hits'), Get_Data(player_name, 'ranged', 'count'))
     local ranged_crit_damage = Get_Data(player_name, 'ranged', 'crit damage') 
@@ -128,7 +128,7 @@ function Focus_Ranged(player_name, total_damage)
         local ranged_crit_percent   = String_Length(Format_Percent(ranged_crit_damage,  total_damage), small_col)
         local ranged_data = ranged_string..' '..ranged_percent_string..' '..ranged_acc_string..' '..ranged_crit_string..' '..ranged_crit_percent
         table.insert(Focus_Layout, ranged_data) 
-        
+
         table.insert(Focus_Layout, '-------------------------------------------------------')
     end
 

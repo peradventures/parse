@@ -1,7 +1,3 @@
-C_Chat = 158
-Show_Error = false
-Show_Warning = false
-
 -- Regular Colors
 C_White        = '\\cs(255,255,255)'
 C_Red          = '\\cs(255,0,0)'

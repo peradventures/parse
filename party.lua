@@ -23,6 +23,8 @@ function Find_Party_Member_By_Name(name, index)
     		return party[PT3[i]][index]
     	end
     end
+
+    return false
 end
 
 --[[

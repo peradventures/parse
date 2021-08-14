@@ -1,4 +1,3 @@
-Use_UI           = true
 Hud_X_Pos        = 1275
 Hud_Y_Pos        = 315
 Hud_Draggable    = true
@@ -25,7 +24,6 @@ Stroke_Width     = 2
 ]] 
 function Create_Window(x_pos, y_pos, font_size, font, bg_alpha, bg_red, bg_blue, bg_green, drag, stroke)
     local content = {}
-    local settings = {}
 
     if (x_pos     == nil) then x_pos = 0 end
     if (y_pos     == nil) then y_pos = 0 end
@@ -38,29 +36,17 @@ function Create_Window(x_pos, y_pos, font_size, font, bg_alpha, bg_red, bg_blue,
     if (drag      == nil) then drag = Hud_Draggable end
     if (stroke    == nil) then stroke = Stroke_Width end
 
-    settings = {
+    local settings = {
         pos     = {x = x_pos, y = y_pos},
         text    = {font = font, size = font_size, Fonts = {'sans-serif'},},
         bg      = {alpha = bg_alpha, red = 0, green = 0, blue = 15},
         flags   = {draggable = drag},
         padding = 7
     }
-    local window = Texts.new(settings)
-    Initialize(window)
-    return window, content
-end
 
---[[
-    DESCRIPTION:    Initialize the text object.
-                    I didn't write this code.
-    PARAMETERS :
-        text        Text object (the window)
-]] 
-function Initialize(text)
-    local properties = L{}
-    properties:append('${token}')      -- texts.append (adds tokens)
-    text:clear()
-    text:append(properties:concat('\n'))    -- appends a new line
+    local window = Texts.new('${token}', settings)
+
+    return window, content
 end
 
 --[[

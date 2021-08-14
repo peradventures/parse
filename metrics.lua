@@ -130,8 +130,7 @@ function Update_Data(mode, value, player_name, target_name, skill, metric)
 		Set_Data(value, index, skill, metric)
 	
 	else
-		Add_Message_To_Chat('E', 'PARSE | Update_Data^metrics')
-		Add_Message_To_Chat('E', 'Invalid update mode: '..tostring(mode))
+		Add_Message_To_Chat('E', 'Update_Data^metrics', 'Invalid update mode: '..tostring(mode))
 	end
 
 end
@@ -156,8 +155,7 @@ function Update_Data_Single(mode, value, player_name, target_name, skill, action
 		Set_Data_Single(value, index, skill, action_name, metric)
 	
 	else
-		Add_Message_To_Chat('E', 'PARSE | Update_Data_Single^metrics')
-		Add_Message_To_Chat('E', 'Invalid update mode: '..tostring(mode))
+		Add_Message_To_Chat('E', 'Update_Data_Single^metrics', 'Invalid update mode: '..tostring(mode))
 	end
 
 	-- This is used for the focus window
@@ -305,9 +303,14 @@ end
 --[[
     DESCRIPTION:    
     PARAMETERS :    
-]] 
+]]
 function Build_Index(player_name, target_name)
 	if (not target_name) then target_name = 'test' end
+
+	if (not player_name) then
+		Add_Message_To_Chat('E', 'Build_Index^metrics', 'player_name: '..tostring(player_name)..' target_name: '..tostring(target_name))
+		return
+	end
 
 	return player_name..':'..target_name
 end

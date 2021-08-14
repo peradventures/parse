@@ -57,9 +57,8 @@ function Melee_Damage(result, player_name, target_name)
         Update_Data('inc', damage, player_name, target_name, 'ranged',   'total')
         Update_Data('inc', damage, player_name, target_name, 'throwing', 'total')
 
-    else 
-        Add_Message_To_Chat('W', 'PARSE | Melee_Damage^handling')
-        Add_Message_To_Chat('W', 'Unhandled animation: '..tostring(animation_id))
+    else
+        Add_Message_To_Chat('W', 'Melee_Damage^handling', 'Unhandled animation: '..tostring(animation_id))
     end
 
     -- MIN/MAX ----------------------------------------------------------------
@@ -110,8 +109,7 @@ function Melee_Damage(result, player_name, target_name)
 
     -- DRK vs. Omen Gorger
     elseif (message_id == 30) then
-        Add_Message_To_Chat('W', 'PARSE | Melee_Damage^handling')
-        Add_Message_To_Chat('A', 'Attack Nuance 30 -- DRK vs. Omen Gorger')
+        Add_Message_To_Chat('A', 'Melee_Damage^handling', 'Attack Nuance 30 -- DRK vs. Omen Gorger')
 
     -- Attack absorbed by shadows
     elseif (message_id == 31) then
@@ -224,10 +222,9 @@ function Handle_Ranged(result, player_name, target_name)
         Add_Message_To_Battle_Log(player_name, 'Ranged nuance '..message_id) end
 
     if (damage == 0) then 
-        Add_Message_To_Chat('W', 'PARSE | Handle_Ranged^handling')
-        Add_Message_To_Chat('W', 'Ranged damage was 0.')
+        Add_Message_To_Chat('W', 'Handle_Ranged^handling', 'Ranged damage was 0.')
     end
-    
+
     if (damage < Get_Data(player_name, 'ranged', 'min')) then Update_Data('set', damage, player_name, target_name, 'ranged', 'min') end
     if (damage > Get_Data(player_name, 'ranged', 'max')) then Update_Data('set', damage, player_name, target_name, 'ranged', 'max') end
 
@@ -273,15 +270,14 @@ end
 
 --[[
     DESCRIPTION:    Handle spell damage (including healing)
-    PARAMETERS :    
-]] 
+    PARAMETERS :
+]]
 function Handle_Spell(act, result, player_name, target_name)
     local spell_id = act.param
     local spell = Res.spells[spell_id]
 
     if (not spell) then
-        Add_Message_To_Chat('E', 'PARSE | Handle_Spell^handling')
-        Add_Message_To_Chat('E', 'Couldn\'t find spell ID '..tostring(spell_id)..' in spells for '..player_name)
+        Add_Message_To_Chat('E', 'Handle_Spell^handling', 'Couldn\'t find spell ID '..tostring(spell_id)..' in spells for '..player_name)
         return
     end
 
@@ -301,8 +297,7 @@ function Handle_Spell(act, result, player_name, target_name)
     end
 
     if (not spell_mapped) then
-        Add_Message_To_Chat('W', 'PARSE | Handle_Spell^handling')
-        Add_Message_To_Chat('W', tostring(spell_name)..' is not included in Damage_Spells global.')
+        --Add_Message_To_Chat('W', 'Handle_Spell^handling', tostring(spell_name)..' is not included in Damage_Spells global.')
     end
 
     if (not damage) then damage = 0 end

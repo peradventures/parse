@@ -118,8 +118,7 @@ function Get_WS_Name(act)
 
     -- If WS_Filter didn't have it either then we need to throw an error.
     if (not ws) then
-        Add_Message_To_Chat('E', 'PARSE: Get_WS_Name^lib')
-        Add_Message_To_Chat('E', 'Add WS ID'..tostring(act.param)..' to WS_Filter.')
+        Add_Message_To_Chat('E', 'Get_WS_Name^lib', 'Add WS ID'..tostring(act.param)..' to WS_Filter.')
         return 0
     end
 
@@ -127,8 +126,7 @@ function Get_WS_Name(act)
 
     -- If we don't have a weaponskill name at this point then something is messed up.
     if (ws_name == nil) then
-        Add_Message_To_Chat('E', 'PARSE: Get_WS_Name^lib')
-        Add_Message_To_Chat('E', tostring(ws.id)..' needs a name in weapon_skills.lua or WS_Filter.')
+        Add_Message_To_Chat('E', 'Get_WS_Name^lib', tostring(ws.id)..' needs a name in weapon_skills.lua or WS_Filter.')
         return 0
     end
 
@@ -151,39 +149,11 @@ function Get_Ability_Name(act)
     local ability_object = Res.job_abilities[ability_id]
 
     if (not ability_object) then
-        Add_Message_To_Chat('E', 'PARSE | Get_Ability_Name^lib')
-        Add_Message_To_Chat('E', 'Can\'t find ability '..tostring(ability_id)) 
+        Add_Message_To_Chat('E', 'Get_Ability_Name^lib', 'Can\'t find ability '..tostring(ability_id)) 
         return nil
     end
 
     return ability_object.en
-end
-
--- message_string needs to be formatted to string ahead of time.
-function Add_Message_To_Chat(message_type, message_string)
-    local show_message = true
-
-    if (not message_type) then message_type = 'A' end
-
-    -- Error
-    if (message_type:lower() == 'e') then
-
-        if (not Show_Error) then
-            show_message = false
-            Errors_Suppressed = Errors_Suppressed + 1
-        end
-
-    -- Warning
-    elseif (message_type:lower() == 'w') then
-
-        if (not Show_Warning) then
-            show_message = false
-            Warnings_Suppressed = Warnings_Suppressed + 1
-        end
-
-    end
-
-    if show_message then windower.add_to_chat(C_Chat, message_string) end
 end
 
 --[[

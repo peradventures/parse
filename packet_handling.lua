@@ -175,8 +175,8 @@ end
 
 --[[
     DESCRIPTION:    Parse the pet ability packet.
-    PARAMETERS :    
-]] 
+    PARAMETERS :
+]]
 function Pet_Ability(act, actor, log_offense)
     -- Influenced by flippant parse
     local pet_data = windower.ffxi.get_mob_by_id(act.actor_id)
@@ -193,8 +193,7 @@ function Pet_Ability(act, actor, log_offense)
 
     local ability_name = Get_Ability_Name(act)
     if (not ability_name) then
-        Add_Message_To_Chat('E', 'PARSE | Pet_Ability^packet_handling')
-        Add_Message_To_Chat('E', 'Ability name not found.')
+        Add_Message_To_Chat('E', 'Pet_Ability^packet_handling', 'Ability name not found.')
         return false
     end
 
@@ -214,4 +213,21 @@ function Pet_Ability(act, actor, log_offense)
     if (damage > 0) then
         Update_Data('inc', 1, owner, target.name, 'ability', 'hits')
     end
+end
+
+--[[
+    DESCRIPTION:
+    PARAMETERS :
+]]
+function Player_Death(actor_id, target_id)
+    local target = Get_Entity_Data(target_id)
+    if (not target) then return end
+
+    local log_death = (target.is_party) or (target.is_alliance)
+    if (not log_death) then return end
+
+    local actor = Get_Entity_Data(actor_id)
+    if (not actor) then return end
+
+    Update_Data('inc', 1, target.name, actor.name, 'death', 'count')
 end
