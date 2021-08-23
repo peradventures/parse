@@ -121,7 +121,7 @@ function (actor_id, target_id, actor_index, target_index, message_id, param_1, p
         Player_Death(actor_id, target_id)
 
     else
-        Add_Message_To_Chat('W', 'action message^parse', 'Action Message: '..tostring(message_id))
+        --Add_Message_To_Chat('W', 'action message^parse', 'Action Message: '..tostring(message_id))
 
     end
 

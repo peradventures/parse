@@ -8,7 +8,7 @@
     DESCRIPTION:
 ]]
 function Col_Header_Rank(column_width)
-    return 'R   '..String_Length('Name', column_width)
+    return ' R   '..String_Length('Name', column_width)
 end
 
 --[[
@@ -202,7 +202,7 @@ function Col_Rank(rank, player_name, column_width)
         color = C_White
     end
 
-    return color..rank..'.  '..String_Length(player_name, column_width)
+    return color..' '..rank..'.  '..String_Length(player_name, column_width)
 end
 
 --[[

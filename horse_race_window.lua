@@ -1,4 +1,4 @@
-Horse_Race_Window, Horse_Race_Content = Create_Window(550, 50, 11, nil, 240)
+Horse_Race_Window, Horse_Race_Content = Create_Window(1050, 850, 11, nil, 0)
 Texts.stroke_width(Horse_Race_Window, 3)
 
 Show_Horse           = true
@@ -11,7 +11,7 @@ Show_Percent         = false
 Total_Damage_Only    = false
 Show_Healing         = false
 Show_Deaths          = true
-Show_Help_Text       = true
+Show_Help_Text       = false
 Top_Rank_Default     = 6
 Top_Rank             = Top_Rank_Default
 
@@ -81,7 +81,7 @@ function Horse_Race_Header()
 
     local filter
     if (Mob_Filter) then filter = Mob_Filter else filter = 'All' end
-    table.insert(Horse_Race_Data, 'Mob Filter: '..filter)
+    table.insert(Horse_Race_Data, ' Mob Filter: '..filter)
 
     local header = ''
     header = header..Col_Header_Rank(name_col)

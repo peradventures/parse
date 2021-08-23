@@ -61,6 +61,7 @@ Single_Damage_Race = {}
     PARAMETERS :    
 ]] 
 function Init_Data(index, player_name)
+	if (not index) then return end
 	if Parse_Data[index] then return end
 
 	Parse_Data[index] = {}
@@ -163,8 +164,8 @@ function Update_Data_Single(mode, value, player_name, target_name, skill, action
 end
 
 --[[
-    DESCRIPTION:    
-    PARAMETERS :    
+    DESCRIPTION:
+    PARAMETERS :
 ]] 
 function Set_Data(value, index, skill, metric)
 	Parse_Data[index][skill][metric] = value
@@ -429,9 +430,17 @@ end
 ]]
 function Populate_Total_Damage_Table()
 	Total_Damage_Race = {}
-	
+
+	local damage
 	for index, _ in pairs(Initialized_Players) do
-		table.insert(Total_Damage_Race, {index, Get_Data(index, 'total', 'total')})
+
+		if (Include_SC_Damage) then
+			damage = Get_Data(index, 'total', 'total')
+		else
+			damage = Get_Data(index, 'total_no_sc', 'total')
+		end
+
+		table.insert(Total_Damage_Race, {index, damage})
 	end
 end
 

@@ -37,7 +37,7 @@ end
 ]] 
 function Total_Party_Damage(party)
     if (not party) then return 1 end
-    
+
     local player_name, index
     local total_damage = 0
     local pt1_count = party.party1_count - 1
@@ -50,7 +50,7 @@ function Total_Party_Damage(party)
         index = Build_Index(player_name)
 
         Init_Data(index)
-        
+
         total_damage = total_damage + Get_Data(player_name, 'total', 'total')
     end
 
@@ -58,9 +58,9 @@ function Total_Party_Damage(party)
     for i = 0, pt2_count, 1 do
         player_name = party[PT2[i]].name
         index = Build_Index(player_name)
-        
+
         Init_Data(index)
-        
+
         total_damage = total_damage + Get_Data(player_name, 'total', 'total')
     end
 
@@ -68,9 +68,9 @@ function Total_Party_Damage(party)
     for i = 0, pt3_count, 1 do
         player_name = party[PT3[i]].name
         index = Build_Index(player_name)
-        
+
         Init_Data(index)
-        
+
         total_damage = total_damage + Get_Data(player_name, 'total', 'total')
     end
 
