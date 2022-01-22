@@ -37,6 +37,7 @@ end
 ]] 
 function Total_Party_Damage(party)
     if (not party) then return 1 end
+    if (not party.party1_count) then return 1 end
 
     local player_name, index
     local total_damage = 0

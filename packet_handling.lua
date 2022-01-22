@@ -68,7 +68,7 @@ function Finish_WS(act, actor, log_offense)
     local result, target, sc_id, sc_name, skillchain
     local damage    = 0
     local sc_damage = 0
-    
+
     for target_index, target_value in pairs(act.targets) do
         for action_index, _ in pairs(target_value.actions) do
 
@@ -90,10 +90,17 @@ function Finish_WS(act, actor, log_offense)
 
     -- Finalize weaponskill data
     -- Have to do it outside of the loop to avoid count attempts and hits multiple times
-    Update_Data('inc', 1, actor.name, target.name, 'ws', 'count')
+
+    local inc_bundle = {
+        value = 1,
+        player_name = actor.name,
+        target_name = target.name,
+    }
+
+    Update_Data('inc', inc_bundle, 'ws', 'count')
     if (damage > 0) then
-        Update_Data('inc', 1, actor.name, target.name, 'ws', 'hits')
-        Update_Data_Single('inc', 1, actor.name, target.name, 'ws', ws_name, 'hits')
+        Update_Data('inc', inc_bundle, 'ws', 'hits')
+        Update_Data_Single('inc', inc_bundle, 'ws', ws_name, 'hits')
     end
 
     -- Update the battle log
@@ -210,8 +217,14 @@ function Pet_Ability(act, actor, log_offense)
         end
     end
 
+    local inc_bundle = {
+        value = 1,
+        player_name = owner,
+        target_name = target.name,
+    }
+
     if (damage > 0) then
-        Update_Data('inc', 1, owner, target.name, 'ability', 'hits')
+        Update_Data('inc', inc_bundle, 'ability', 'hits')
     end
 end
 
@@ -229,5 +242,11 @@ function Player_Death(actor_id, target_id)
     local actor = Get_Entity_Data(actor_id)
     if (not actor) then return end
 
-    Update_Data('inc', 1, target.name, actor.name, 'death', 'count')
+    local inc_bundle = {
+        value = 1,
+        player_name = target.name,
+        target_name = actor.name,
+    }
+
+    Update_Data('inc', inc_bundle, 'death', 'count')
 end

@@ -6,6 +6,7 @@ C_Red          = '\\cs(255,0,0)'
 C_Green        = '\\cs(39,238,17)'
 C_Yellow       = '\\cs(255,198,0)'
 C_Bright_Green = '\\cs(3,252,3)'
+C_Gray         = '\\cs(125,125,125)'
 
 -- Elemental Colors
 Elemental_Colors = {
@@ -131,6 +132,7 @@ Damage_Ability_List = {
     [630] = {id = 630, en = "Chaotic Strike"},
     [632] = {id = 632, en = "Judgment Bolt"},
     [634] = {id = 634, en = "Volt Strike"},
+    [665] = {id = 665, en = "Night Terror"},
     [960] = {id = 960, en = "Clarsach Call"},
     [967] = {id = 967, en = "Sonic Buffet"},
     [970] = {id = 970, en = "Hysteric Assault"}

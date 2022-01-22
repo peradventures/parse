@@ -1,5 +1,6 @@
-Blog_Window,  Blog_Content  = Create_Window(30, 475, 11, nil, 50)
-Texts.stroke_width(Blog_Window, 3)
+Blog_Window,  Blog_Content  = Create_Window(30, 410, 10, nil, 0)
+Texts.stroke_width(Blog_Window, 2)
+Texts.stroke_color(Blog_Window, 28, 28, 28)
 
 Blog = {}
 Blog_Length  = 13
@@ -68,7 +69,7 @@ end
 ]]
 function Blog_Name(player_name)
     local color = Blog_Default_Color
-    
+
     if Is_Me(player_name) then color = C_Bright_Green end
 
     return Format_String(player_name, 9, color)

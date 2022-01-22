@@ -1,7 +1,7 @@
 C_Chat = 158
 
 Show_Error   = true
-Show_Warning = true
+Show_Warning = false
 
 Errors_Suppressed = 0
 Warnings_Suppressed = 0

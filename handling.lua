@@ -6,7 +6,7 @@
 
 --[[
     DESCRIPTION:    Set a node to a particular value.
-    PARAMETERS :    
+    PARAMETERS :
         result      Data for each action taken on a target.
         actor       Primary node.
     NOTES      :
@@ -29,62 +29,87 @@ function Melee_Damage(result, player_name, target_name)
     local damage = result.param
     local throwing = false
 
-    Update_Data('inc', damage, player_name, target_name, 'total', 'total')
-    Update_Data('inc', damage, player_name, target_name, 'total_no_sc', 'total')
+    local damage_bundle = {
+        value = damage,
+        player_name = player_name,
+        target_name = target_name,
+    }
+
+    local inc_bundle = {
+        value = 1,
+        player_name = player_name,
+        target_name = target_name,
+    }
+
+    local dec_bundle = {
+        value = 1,
+        player_name = player_name,
+        target_name = target_name,
+    }
+
+    Update_Data('inc', damage_bundle, 'total', 'total')
+    Update_Data('inc', damage_bundle, 'total_no_sc', 'total')
 
     -- MELEE ------------------------------------------------------------------
 
     -- Main Hand
     if (animation_id == 0) then
-        Update_Data('inc', damage, player_name, target_name, 'melee',         'total')
-        Update_Data('inc', damage, player_name, target_name, 'melee primary', 'total')
+        Update_Data('inc', damage_bundle, 'melee',         'total')
+        Update_Data('inc', damage_bundle, 'melee primary', 'total')
 
     -- Off Hand
     elseif (animation_id == 1) then
-        Update_Data('inc', damage, player_name, target_name, 'melee',           'total')
-        Update_Data('inc', damage, player_name, target_name, 'melee secondary', 'total')
+        Update_Data('inc', damage_bundle, 'melee',           'total')
+        Update_Data('inc', damage_bundle, 'melee secondary', 'total')
 
     -- Kicks
     elseif (animation_id == 2) or (animation_id == 3) then
-        Update_Data('inc', damage, player_name, target_name, 'melee',       'total')
-        Update_Data('inc', damage, player_name, target_name, 'melee kicks', 'total')
+        Update_Data('inc', damage_bundle, 'melee',       'total')
+        Update_Data('inc', damage_bundle, 'melee kicks', 'total')
 
     -- RANGED -----------------------------------------------------------------
 
     -- Throwing
     elseif (animation_id == 4) then
         throwing = true
-        Update_Data('inc', damage, player_name, target_name, 'ranged',   'total')
-        Update_Data('inc', damage, player_name, target_name, 'throwing', 'total')
+        Update_Data('inc', damage_bundle, 'ranged',   'total')
+        Update_Data('inc', damage_bundle, 'throwing', 'total')
 
     else
         Add_Message_To_Chat('W', 'Melee_Damage^handling', 'Unhandled animation: '..tostring(animation_id))
+
     end
 
     -- MIN/MAX ----------------------------------------------------------------
 
     if throwing then
-        Update_Data('inc', 1, player_name, target_name, 'ranged', 'count')
-        if (damage < Get_Data(player_name, 'ranged', 'min')) then Update_Data('set', damage, player_name, target_name, 'ranged', 'min') end
-        if (damage > Get_Data(player_name, 'ranged', 'max')) then Update_Data('set', damage, player_name, target_name, 'ranged', 'max') end
+        Update_Data('inc', inc_bundle, 'ranged', 'count')
+        if (damage < Get_Data(player_name, 'ranged', 'min')) then Update_Data('set', damage_bundle, 'ranged', 'min') end
+        if (damage > Get_Data(player_name, 'ranged', 'max')) then Update_Data('set', damage_bundle, 'ranged', 'max') end
     else
-        Update_Data('inc', 1, player_name, target_name, 'melee', 'count')
-        if (damage < Get_Data(player_name, 'melee', 'min')) then Update_Data('set', damage, player_name, target_name, 'melee', 'min') end
-        if (damage > Get_Data(player_name, 'melee', 'max')) then Update_Data('set', damage, player_name, target_name, 'melee', 'max') end
+        Update_Data('inc', inc_bundle, 'melee', 'count')
+        if (damage < Get_Data(player_name, 'melee', 'min')) then Update_Data('set', damage_bundle, 'melee', 'min') end
+        if (damage > Get_Data(player_name, 'melee', 'max')) then Update_Data('set', damage_bundle, 'melee', 'max') end
     end
 
     -- ENSPELL ----------------------------------------------------------------
-    
-    local enspell_damage = result.add_effect_param 
+
+    local enspell_damage = result.add_effect_param
 
     if (enspell_damage > 0) then
 
+        local enspell_bundle = {
+            value = enspell_damage,
+            player_name = player_name,
+            target_name = target_name,
+        }
+
         -- Element of the enspell is in add_effect_animation
-        Update_Data('inc', enspell_damage, player_name, target_name, 'magic',   'total')
-        Update_Data('inc', enspell_damage, player_name, target_name, 'enspell', 'total')
-        Update_Data('inc', 1, player_name, target_name, 'magic', 'count')
-        if (enspell_damage < Get_Data(player_name, 'magic', 'min')) then Update_Data('set', enspell_damage, player_name, target_name, 'magic', 'min') end
-        if (enspell_damage > Get_Data(player_name, 'magic', 'max')) then Update_Data('set', enspell_damage, player_name, target_name, 'magic', 'max') end
+        Update_Data('inc', enspell_bundle, 'magic',   'total')
+        Update_Data('inc', enspell_bundle, 'enspell', 'total')
+        Update_Data('inc', inc_bundle, 'magic', 'count')
+        if (enspell_damage < Get_Data(player_name, 'magic', 'min')) then Update_Data('set', enspell_bundle, 'magic', 'min') end
+        if (enspell_damage > Get_Data(player_name, 'magic', 'max')) then Update_Data('set', enspell_bundle, 'magic', 'max') end
 
     end
 
@@ -94,17 +119,17 @@ function Melee_Damage(result, player_name, target_name)
 
     -- Hit
     if (message_id == 1) then 
-        Update_Data('inc', 1, player_name, target_name, 'melee', 'hits')
+        Update_Data('inc', inc_bundle, 'melee', 'hits')
         Running_Accuracy(player_name, true)
-    
+
     -- Healing with melee attacks
     elseif (message_id == 3) or (message_id == 373) then
-        Update_Data('inc', 1,      player_name, target_name, 'melee', 'hits')
-        Update_Data('inc', damage, player_name, target_name, 'melee', 'mob heal')
+        Update_Data('inc', inc_bundle, 'melee', 'hits')
+        Update_Data('inc', damage_bundle, 'melee', 'mob heal')
 
     -- Misses
     elseif (message_id == 15) then 
-        Update_Data('inc', 1, player_name, target_name, 'melee', 'misses')
+        Update_Data('inc', inc_bundle, 'melee', 'misses')
         Running_Accuracy(player_name, false)
 
     -- DRK vs. Omen Gorger
@@ -113,42 +138,42 @@ function Melee_Damage(result, player_name, target_name)
 
     -- Attack absorbed by shadows
     elseif (message_id == 31) then
-        Update_Data('inc', 1, player_name, target_name, 'melee', 'hits')
-        Update_Data('inc', 1, player_name, target_name, 'melee', 'shadows')
-    
+        Update_Data('inc', inc_bundle, 'melee', 'hits')
+        Update_Data('inc', inc_bundle, 'melee', 'shadows')
+
     -- Attack dodged (Perfect Dodge) / Remove the count so perfect dodge doesn't count.
     elseif (message_id == 32) then
-        Update_Data('inc', -1, player_name, target_name, 'melee', 'count')
+        Update_Data('inc', dec_bundle, 'melee', 'count')
 
     -- Critical Hits
     elseif (message_id == 67) then 
-        Update_Data('inc', 1,      player_name, target_name, 'melee', 'hits')
-        Update_Data('inc', 1,      player_name, target_name, 'melee', 'crits')
-        Update_Data('inc', damage, player_name, target_name, 'melee', 'crit damage')
+        Update_Data('inc', inc_bundle, 'melee', 'hits')
+        Update_Data('inc', inc_bundle, 'melee', 'crits')
+        Update_Data('inc', damage_bundle, 'melee', 'crit damage')
         Running_Accuracy(player_name, true)
 
     -- Throwing Critical Hit
     elseif (message_id == 353) then
-        Update_Data('inc', 1,      player_name, target_name, 'ranged', 'hits')
-        Update_Data('inc', 1,      player_name, target_name, 'ranged', 'crits')
-        Update_Data('inc', damage, player_name, target_name, 'ranged', 'crit damage')
+        Update_Data('inc', inc_bundle, 'ranged', 'hits')
+        Update_Data('inc', inc_bundle, 'ranged', 'crits')
+        Update_Data('inc', damage_bundle, 'ranged', 'crit damage')
         Running_Accuracy(player_name, true)
-        
+
     -- Throwing Miss
     elseif (message_id == 354) then
-        Update_Data('inc', 1, player_name, target_name, 'ranged', 'misses')
+        Update_Data('inc', inc_bundle, 'ranged', 'misses')
         Running_Accuracy(player_name, false)
 
     -- Throwing Square Hit
     elseif (message_id == 576) then
-        Update_Data('inc', 1, player_name, target_name, 'ranged', 'hits')
+        Update_Data('inc', inc_bundle, 'ranged', 'hits')
         Running_Accuracy(player_name, true)
 
     -- Throwing Truestrike
     elseif (message_id == 577) then
-        Update_Data('inc', 1, player_name, target_name, 'ranged', 'hits')
+        Update_Data('inc', inc_bundle, 'ranged', 'hits')
         Running_Accuracy(player_name, true)
-  
+
     else 
         Add_Message_To_Battle_Log(player_name, 'Att. nuance '..message_id) end
 
@@ -172,61 +197,73 @@ end
     PARAMETERS :    
         result      Data for each action taken on a target.
         actor       Primary node.
-]] 
+]]
 function Handle_Ranged(result, player_name, target_name)
     local damage = result.param
     local message_id = result.message
-    
-    Update_Data('inc', damage, player_name, target_name, 'total',  'total')
-    Update_Data('inc', damage, player_name, target_name, 'total_no_sc', 'total')
-    Update_Data('inc', 1,      player_name, target_name, 'ranged', 'count')
+
+    local damage_bundle = {
+        value = damage,
+        player_name = player_name,
+        target_name = target_name,
+    }
+
+    local inc_bundle = {
+        value = 1,
+        player_name = player_name,
+        target_name = target_name,
+    }
+
+    Update_Data('inc', damage_bundle, 'total',  'total')
+    Update_Data('inc', damage_bundle, 'total_no_sc', 'total')
+    Update_Data('inc', inc_bundle, 'ranged', 'count')
 
     -- Miss /////////////////////////////////////////////////////////
     if (message_id == 354) then 
-    	Update_Data('inc', 1, player_name, target_name, 'ranged', 'misses')
+    	Update_Data('inc', inc_bundle, 'ranged', 'misses')
     	return
 
     -- Shadows //////////////////////////////////////////////////////
     elseif (message_id == 31) then
-        Update_Data('inc', 1, player_name, target_name, 'ranged', 'hits')
-        Update_Data('inc', 1, player_name, target_name, 'ranged', 'shadows')
+        Update_Data('inc', inc_bundle, 'ranged', 'hits')
+        Update_Data('inc', inc_bundle, 'ranged', 'shadows')
         return
 
     -- Regular Hit //////////////////////////////////////////////////
     elseif (message_id == 352) then
-        Update_Data('inc', 1,      player_name, target_name, 'ranged', 'hits')
-        Update_Data('inc', damage, player_name, target_name, 'ranged', 'total')
+        Update_Data('inc', inc_bundle, 'ranged', 'hits')
+        Update_Data('inc', damage_bundle, 'ranged', 'total')
         Running_Accuracy(player_name, true)
 
     -- Square Hit ///////////////////////////////////////////////////
     elseif (message_id == 576) then
-        Update_Data('inc', 1,      player_name, target_name, 'ranged', 'hits')
-        Update_Data('inc', damage, player_name, target_name, 'ranged', 'total')
+        Update_Data('inc', inc_bundle, 'ranged', 'hits')
+        Update_Data('inc', damage_bundle, 'ranged', 'total')
         Running_Accuracy(player_name, true)
 
     -- Truestrike ///////////////////////////////////////////////////
     elseif (message_id == 577) then
-        Update_Data('inc', 1,      player_name, target_name, 'ranged', 'hits')
-        Update_Data('inc', damage, player_name, target_name, 'ranged', 'total')
+        Update_Data('inc', inc_bundle, 'ranged', 'hits')
+        Update_Data('inc', damage_bundle, 'ranged', 'total')
         Running_Accuracy(player_name, true)
 
     -- Crit /////////////////////////////////////////////////////////
     elseif (message_id == 353) then
-        Update_Data('inc', 1, player_name, target_name, 'ranged', 'hits')
-        Update_Data('inc', 1, player_name, target_name, 'ranged', 'crits')
-        Update_Data('inc', damage, player_name, target_name, 'ranged', 'crit damage')
-        Update_Data('inc', damage, player_name, target_name, 'ranged', 'total')
+        Update_Data('inc', inc_bundle, 'ranged', 'hits')
+        Update_Data('inc', inc_bundle, 'ranged', 'crits')
+        Update_Data('inc', damage_bundle, 'ranged', 'crit damage')
+        Update_Data('inc', damage_bundle, 'ranged', 'total')
         Running_Accuracy(player_name, true)
 
     else
         Add_Message_To_Battle_Log(player_name, 'Ranged nuance '..message_id) end
 
-    if (damage == 0) then 
+    if (damage == 0) then
         Add_Message_To_Chat('W', 'Handle_Ranged^handling', 'Ranged damage was 0.')
     end
 
-    if (damage < Get_Data(player_name, 'ranged', 'min')) then Update_Data('set', damage, player_name, target_name, 'ranged', 'min') end
-    if (damage > Get_Data(player_name, 'ranged', 'max')) then Update_Data('set', damage, player_name, target_name, 'ranged', 'max') end
+    if (damage < Get_Data(player_name, 'ranged', 'min')) then Update_Data('set', damage_bundle, 'ranged', 'min') end
+    if (damage > Get_Data(player_name, 'ranged', 'max')) then Update_Data('set', damage_bundle, 'ranged', 'max') end
 
 end
 
@@ -277,7 +314,7 @@ function Handle_Spell(act, result, player_name, target_name)
     local spell = Res.spells[spell_id]
 
     if (not spell) then
-        Add_Message_To_Chat('E', 'Handle_Spell^handling', 'Couldn\'t find spell ID '..tostring(spell_id)..' in spells for '..player_name)
+        Add_Message_To_Chat('W', 'Handle_Spell^handling', 'Couldn\'t find spell ID '..tostring(spell_id)..' in spells for '..player_name)
         return
     end
 

@@ -2,10 +2,12 @@ Errors_Suppressed = 0
 Warnings_Suppressed = 0
 
 Column_Widths = {
-    ['name']   = 15,
-    ['dmg']    = 11,
-    ['small']  = 8,
-    ['single'] = 4
+    ['name']     = 15,
+    ['dmg']      = 11,
+    ['comp dmg'] = 7,
+    ['percent']  = 8,
+    ['small']    = 8,
+    ['single']   = 4
 }
 
 Column_Widths_Compact = {
@@ -56,35 +58,35 @@ function Is_Me(string)
     return match
 end
 
---[[
-    DESCRIPTION:    Calculates a percent
-    PARAMETERS :
-        num         Numerator
-        denom       Denominator
-]]
-function Format_Percent(num, denom, length, color, line_color)
+-- --[[
+--     DESCRIPTION:    Calculates a percent
+--     PARAMETERS :
+--         num         Numerator
+--         denom       Denominator
+-- ]]
+-- function Format_Percent(num, denom, length, color, line_color)
 
-    if (not length) then length = 5 end
-    if (not color) then color = C_White end
-    if (not line_color) then line_color = C_White end
+--     if (not length) then length = 5 end
+--     if (not color) then color = C_White end
+--     if (not line_color) then line_color = C_White end
 
-    -- Can't divide by zero
-    if (denom == 0) then
-        return Format_String('0', length, line_color, line_color, true)
-    end
+--     -- Can't divide by zero
+--     if (denom == 0) then
+--         return Format_String('0', length, line_color, line_color, true)
+--     end
 
-    local percent = (num / denom) * 100
+--     local percent = (num / denom) * 100
 
-    -- Zero should just be zero without any decimal points
-    if (percent == 0) then
-        return Format_String('0', length, line_color, line_color, true)
-    end
+--     -- Zero should just be zero without any decimal points
+--     if (percent == 0) then
+--         return Format_String('0', length, line_color, line_color, true)
+--     end
 
-    -- Five total characters with one decimal precision (100.0)
-    local percent_string = string.format("%5.1f", percent)
+--     -- Five total characters with one decimal precision (100.0)
+--     local percent_string = string.format("%5.1f", percent)
 
-    return Format_String(tostring(percent_string), length, color, line_color, true)
-end
+--     return Format_String(tostring(percent_string), length, color, line_color, true)
+-- end
 
 --[[
     DESCRIPTION:

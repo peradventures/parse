@@ -93,6 +93,8 @@ function Init_Data_Single(index, player_name, skill, action_name)
 	-- Don't want to overwrite action_name node if it is already built out
 	if (Parse_Data[index][skill]['single'][action_name]) then return end
 
+	Add_Message_To_Chat('A', 'test', tostring(index)..' '..tostring(skill)..' '..tostring(action_name))
+
 	Parse_Data[index][skill]['single'][action_name] = {}
 
 	-- Initialize single data nodes
@@ -115,23 +117,29 @@ end
 -- ******************************************************************************************************
 
 --[[
-    DESCRIPTION:    
-    PARAMETERS :    
+    DESCRIPTION:
+    PARAMETERS :
 ]] 
-function Update_Data(mode, value, player_name, target_name, skill, metric)
+function Update_Data(mode, data_bundle, skill, metric)
+
+	local value = data_bundle.value
+	local player_name = data_bundle.player_name
+	local target_name = data_bundle.target_name
 	local index = Build_Index(player_name, target_name)
+
 	Init_Data(index, player_name)
 
 	-- Increment from existing value
 	if (mode == 'inc') then
 		Inc_Data(value, index, skill, metric)
-	
+
 	-- Set value directly
 	elseif (mode == 'set') then
 		Set_Data(value, index, skill, metric)
-	
+
 	else
 		Add_Message_To_Chat('E', 'Update_Data^metrics', 'Invalid update mode: '..tostring(mode))
+
 	end
 
 end
@@ -140,7 +148,12 @@ end
     DESCRIPTION:    
     PARAMETERS :    
 ]] 
-function Update_Data_Single(mode, value, player_name, target_name, skill, action_name, metric)
+function Update_Data_Single(mode, data_bundle, skill, action_name, metric)
+
+	local value = data_bundle.value
+	local player_name = data_bundle.player_name
+	local target_name = data_bundle.target_name
+
 	local index = Build_Index(player_name, target_name)
 	Init_Data_Single(index, player_name, skill, action_name)
 
@@ -150,11 +163,11 @@ function Update_Data_Single(mode, value, player_name, target_name, skill, action
 	-- Increment from existing value
 	if (mode == 'inc') then
 		Inc_Data_Single(value, index, skill, action_name, metric)
-	
+
 	-- Set value directly
 	elseif (mode == 'set') then
 		Set_Data_Single(value, index, skill, action_name, metric)
-	
+
 	else
 		Add_Message_To_Chat('E', 'Update_Data_Single^metrics', 'Invalid update mode: '..tostring(mode))
 	end
@@ -176,6 +189,7 @@ function Set_Data_Single(value, index, skill, action_name, metric)
 end
 
 function Inc_Data(value, index, skill, metric)
+	if (not index) or (not skill) or (not metric) then return end
 	Parse_Data[index][skill][metric] = Parse_Data[index][skill][metric] + value
 end
 
@@ -306,6 +320,7 @@ end
     PARAMETERS :    
 ]]
 function Build_Index(player_name, target_name)
+
 	if (not target_name) then target_name = 'test' end
 
 	if (not player_name) then
@@ -328,31 +343,43 @@ function Single_Damage(player_name, target_name, skill, damage, action_name)
     local index = Build_Index(player_name, target_name)
     Init_Data_Single(index, player_name, skill, action_name)
 
+	local damage_bundle = {
+		value = damage,
+		player_name = player_name,
+		target_name = target_name,
+	}
+
+	local inc_bundle = {
+		value = 1,
+		player_name = player_name,
+		target_name = target_name,
+	}
+
     if (skill ~= 'healing') then
-    	Update_Data('inc', damage, player_name, target_name, 'total', 'total') 
+    	Update_Data('inc', damage_bundle, 'total', 'total') 
 
 		if (skill ~= 'sc') then
-			Update_Data('inc', damage, player_name, target_name, 'total_no_sc', 'total')
+			Update_Data('inc', damage_bundle, 'total_no_sc', 'total')
 		end
 
     end
 
     -- Overall Data
-    Update_Data('inc', damage, player_name, target_name, skill, 'total')
-    if (damage < Get_Data(player_name, skill, 'min')) then Update_Data('set', damage, player_name, target_name, skill, 'min') end
-    if (damage > Get_Data(player_name, skill, 'max')) then Update_Data('set', damage, player_name, target_name, skill, 'max') end
+    Update_Data('inc', damage_bundle, skill, 'total')
+    if (damage < Get_Data(player_name, skill, 'min')) then Update_Data('set', damage_bundle, skill, 'min') end
+    if (damage > Get_Data(player_name, skill, 'max')) then Update_Data('set', damage_bundle, skill, 'max') end
 
     -- Single Data
-    Update_Data_Single('inc', damage, player_name, target_name, skill, action_name, 'total')
-    Update_Data_Single('inc', 1,      player_name, target_name, skill, action_name, 'count')
+    Update_Data_Single('inc', damage_bundle, skill, action_name, 'total')
+    Update_Data_Single('inc', inc_bundle, skill, action_name, 'count')
     -- 'hits' gets incremented in parse.lua to handle AOEs
 
     if (damage < Get_Data_Single(player_name, skill, action_name, 'min')) then
-    	Update_Data_Single('set', damage, player_name, target_name, skill, action_name, 'min')
+    	Update_Data_Single('set', damage_bundle, skill, action_name, 'min')
     end
 
     if (damage > Get_Data_Single(player_name, skill, action_name, 'max')) then
-    	Update_Data_Single('set', damage, player_name, target_name, skill, action_name, 'max')
+    	Update_Data_Single('set', damage_bundle, skill, action_name, 'max')
     end
 end
 

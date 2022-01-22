@@ -1,19 +1,21 @@
-Horse_Race_Window, Horse_Race_Content = Create_Window(1050, 850, 11, nil, 0)
-Texts.stroke_width(Horse_Race_Window, 3)
+Horse_Race_Window, Horse_Race_Content = Create_Window(1025, 850, 10, nil, 0)
+Texts.stroke_width(Horse_Race_Window, 2)
+Texts.stroke_color(Horse_Race_Window, 28, 28, 28)
 
-Show_Horse           = true
-Compact_Mode         = true
-Show_Crit            = false
-Combine_Crit         = true
-Show_Total_Acc       = false
-Include_SC_Damage    = false
-Show_Percent         = false
-Total_Damage_Only    = false
-Show_Healing         = false
-Show_Deaths          = true
-Show_Help_Text       = false
-Top_Rank_Default     = 6
-Top_Rank             = Top_Rank_Default
+Show_Horse             = true
+Compact_Mode           = true
+Show_Crit              = false
+Combine_Crit           = true
+Show_Total_Acc         = false
+Include_SC_Damage      = false
+Show_Percent           = false
+Total_Damage_Only      = false
+Show_Healing           = false
+Show_Deaths            = true
+Show_Help_Text         = false
+Accuracy_Show_Attempts = false
+Top_Rank_Default       = 6
+Top_Rank               = Top_Rank_Default
 
 --[[
     DESCRIPTION:    Refreshes the parser on the screen.
@@ -40,8 +42,6 @@ end
     DESCRIPTION:    Populates horse race parser.
 ]] 
 function Horse_Race()
-    local party = windower.ffxi.get_party()
-    if (not party) then return end
 
     -- Populate Total_Damage_Race to put the highest damage on top
     Sort_Damage()
@@ -51,11 +51,10 @@ function Horse_Race()
     Horse_Race_Header()
 
     -- Populate the horse race window with data from the top [x] players
-    local party_damage = Total_Party_Damage(party)
     local player_name
     for i, v in ipairs(Total_Damage_Race) do
         player_name = v[1]
-        if (i <= Top_Rank) then Horse_Race_Rows(i, player_name, party_damage) end
+        if (i <= Top_Rank) then Horse_Race_Rows(i, player_name) end
     end
 
     Horse_Race_Help_Text()
@@ -68,16 +67,8 @@ end
 ]]
 function Horse_Race_Header()
 
-    local cols
-    if (Compact_Mode) then
-        cols = Column_Widths_Compact
-    else
-        cols = Column_Widths
-    end
-
-    local name_col  = cols['name']
-    local dmg_col   = cols['dmg']
-    local small_col = cols['small']
+    local name_col  = Column_Widths['name']
+    local small_col = Column_Widths['small']
 
     local filter
     if (Mob_Filter) then filter = Mob_Filter else filter = 'All' end
@@ -85,17 +76,30 @@ function Horse_Race_Header()
 
     local header = ''
     header = header..Col_Header_Rank(name_col)
-    header = header..Col_Header_Damage_Percent(small_col)
-    header = header..Col_Header_Damage_Number(dmg_col)
-    header = header..Col_Header_Melee_Damage(dmg_col)
-    header = header..Col_Header_Accuracy(small_col)
-    header = header..Col_Header_Crits(small_col)
-    header = header..Col_Header_Weaponskill(dmg_col)
-    header = header..Col_Header_Skillchain(dmg_col)
-    header = header..Col_Header_Ranged_Damage(dmg_col)
-    header = header..Col_Header_Magic_Damage(dmg_col)
-    header = header..Col_Header_Job_Ability_Damage(dmg_col)
-    header = header..Col_Header_Healing(dmg_col)
+    header = header..Col_Header_Basic('%T', true)
+    header = header..Col_Header_Basic('Total')
+    header = header..Col_Header_Basic('%A25', true)
+    header = header..Col_Header_Basic('Melee')
+    header = header..Col_Header_Basic('%A25', true)
+
+    if (Show_Crit) then
+        header = header..Col_Header_Crits(small_col)
+    end
+
+    header = header..Col_Header_Basic('WS')
+
+    if (Include_SC_Damage) then
+        header = header..Col_Header_Basic('SC')
+    end
+
+    header = header..Col_Header_Basic('Ranged')
+    header = header..Col_Header_Basic('Magic')
+    header = header..Col_Header_Basic('JA')
+
+    if (Show_Healing) then
+        header = header..Col_Header_Basic('Healing')
+    end
+
     header = header..Col_Header_Deaths(small_col)
 
     table.insert(Horse_Race_Data, header)
@@ -107,41 +111,38 @@ end
     	actor			Primary node
     	party_damage 	Total damage from party / alliance
 ]]
-function Horse_Race_Rows(rank, player_name, party_damage)
-    local cols
-
-    if (Compact_Mode) then
-        cols = Column_Widths_Compact
-    else
-        cols = Column_Widths
-    end
-
-    local name_col  = cols['name']
-    local dmg_col   = cols['dmg']
-    local small_col = cols['small']
-
-    local grand_total
-    if (Include_SC_Damage) then
-        grand_total = Get_Data(player_name, 'total', 'total')
-    else
-        grand_total = Get_Data(player_name, 'total_no_sc', 'total')
-    end
+function Horse_Race_Rows(rank, player_name)
+    local name_col  = Column_Widths['name']
+    local small_col = Column_Widths['small']
 
     local melee_attempts = Get_Data(player_name, 'melee', 'count')
 
     local row = ''
     row = row..Col_Rank(rank, player_name, name_col)
-    row = row..Col_Damage_Percent(grand_total, party_damage, small_col)
-    row = row..Col_Damage_Number(grand_total, dmg_col)
-    row = row..Col_Melee_Damage(player_name, dmg_col)
-    row = row..Col_Melee_Accuracy(player_name, melee_attempts, small_col)
-    row = row..Col_Critical_Rate(player_name, melee_attempts, small_col)
-    row = row..Col_Weaponskill_Damage(player_name, dmg_col)
-    row = row..Col_Skillchain_Damage(player_name, dmg_col)
-    row = row..Col_Ranged_Damage(player_name, dmg_col)
-    row = row..Col_Magic_Damage(player_name, dmg_col)
-    row = row..Col_Ability_Damage(player_name, dmg_col)
-    row = row..Col_Healing_Amount(player_name, dmg_col)
+    row = row..Col_Grand_Total(player_name, true)
+    row = row..Col_Grand_Total(player_name)
+    row = row..Col_Running_Accuracy(player_name, small_col)
+    row = row..Col_Damage(player_name, 'melee')
+    row = row..Col_Accuracy(player_name, 'melee')
+
+    if (Show_Crit) then
+        row = row..Col_Critical_Rate(player_name, melee_attempts, small_col)
+    end
+
+    row = row..Col_Damage(player_name, 'ws')
+
+    if (Include_SC_Damage) then
+        row = row..Col_Damage(player_name, 'sc')
+    end
+
+    row = row..Col_Damage(player_name, 'ranged')
+    row = row..Col_Damage(player_name, 'magic')
+    row = row..Col_Damage(player_name, 'ability')
+
+    if (Show_Healing) then
+        row = row..Col_Damage(player_name, 'healing')
+    end
+
     row = row..Col_Deaths(player_name, small_col)
     row = row..C_White
 

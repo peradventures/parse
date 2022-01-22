@@ -21,21 +21,22 @@ end
 --[[
     DESCRIPTION:
 ]]
-function Col_Header_Damage_Percent(column_width)
-    local damage_percent = ''
+function Col_Header_Basic(text, percent, color, line_color)
 
-    if (Show_Percent) then
-        damage_percent = String_Length('T%', column_width, true)
+    local column_width
+
+    if (percent) then
+        column_width = Column_Widths['percent']
+    else
+        if (Compact_Mode) then
+            column_width = Column_Widths['comp dmg']
+        else
+            column_width = Column_Widths['dmg']
+        end
     end
 
-    return damage_percent
-end
+    return Format_String(text, column_width, color, line_color, true)
 
---[[
-    DESCRIPTION:
-]]
-function Col_Header_Damage_Number(column_width)
-    return String_Length('T#', column_width, true)
 end
 
 --[[
@@ -51,20 +52,6 @@ function Col_Header_Accuracy(column_width)
     end
 
     return accuracy_header
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Header_Melee_Damage(column_width)
-    local melee_header = ''
-
-    if (not Total_Damage_Only) then
-        melee_header = String_Length('Melee', column_width, true)
-    end
-
-    return melee_header
 end
 
 --[[
@@ -89,70 +76,6 @@ function Col_Header_Crits(column_width)
     end
 
     return crit_header
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Header_Weaponskill(column_width)
-    return String_Length('WS', column_width, true)
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Header_Skillchain(column_width)
-    local skillchain_header = ''
-
-    if (Include_SC_Damage) then
-        skillchain_header = String_Length('SC', column_width, true)
-    end
-
-    return skillchain_header
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Header_Ranged_Damage(column_width)
-    local ranged_header = ''
-
-    if (not Total_Damage_Only) then
-        ranged_header = String_Length('Ranged', column_width, true)
-    end
-
-    return ranged_header
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Header_Magic_Damage(column_width)
-    local magic_header = ''
-
-    if (not Total_Damage_Only) then
-        magic_header = String_Length('Magic', column_width, true)
-    end
-
-    return magic_header
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Header_Job_Ability_Damage(column_width)
-    local ability_header = ''
-
-    if (not Total_Damage_Only) then
-        ability_header = String_Length('JA', column_width, true)
-    end
-
-    return ability_header
 end
 
 --[[
@@ -209,40 +132,198 @@ end
     DESCRIPTION:
     PARAMETERS :
 ]]
-function Col_Damage_Percent(grand_total, party_damage, column_width)
-    local percent = ''
+function Col_Grand_Total(player_name, percent)
 
-    if (Show_Percent) then
-        percent = Format_Percent(grand_total, party_damage, column_width)
-    end
-
-    return percent
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Damage_Number(grand_total, column_width)
-    return Format_Number(grand_total, column_width)
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Melee_Accuracy(player_name, melee_attempts, column_width)
-    local accuracy = ''
-
-    if (Show_Total_Acc) then
-        local hits = Get_Data(player_name, 'melee', 'hits')
-        accuracy = Format_Percent(hits, melee_attempts, column_width)
+    local grand_total
+    if (Include_SC_Damage) then
+        grand_total = Get_Data(player_name, 'total', 'total')
     else
-        local accuracy_flow = Tally_Running_Accuracy(player_name, column_width)
-        accuracy = accuracy_flow
+        grand_total = Get_Data(player_name, 'total_no_sc', 'total')
     end
 
-    return accuracy
+    local color
+    if (grand_total == 0) then
+        color = C_Gray
+    end
+
+    local column_width
+    if (percent) then
+        column_width = Column_Widths['percent']
+
+        local party = windower.ffxi.get_party()
+        if (not party) then return 'ERROR' end
+        local party_damage = Total_Party_Damage(party)
+
+        return Format_Percent(grand_total, party_damage, column_width, color)
+    else
+        if (Compact_Mode) then
+            column_width = Column_Widths['comp dmg']
+        else
+            column_width = Column_Widths['dmg']
+        end
+
+        return Format_Number(grand_total, column_width, color)
+    end
+
+end
+
+--[[
+    DESCRIPTION:
+    PARAMETERS :
+]]
+function Col_Damage(player_name, damage_type, percent)
+
+    local column_width
+    local focused_damage = Get_Data(player_name, damage_type, 'total')
+
+    local color
+    if (focused_damage == 0) then
+        color = C_Gray
+    end
+
+    if (percent) then
+        column_width = Column_Widths['percent']
+        local total_damage = Get_Data(player_name, 'total', 'total')
+        return Format_Percent(focused_damage, total_damage, column_width, color)
+    else
+        if (Compact_Mode) then
+            column_width = Column_Widths['comp dmg']
+        else
+            column_width = Column_Widths['dmg']
+        end
+
+        return Format_Number(focused_damage, column_width, color)
+    end
+
+end
+
+--[[
+    DESCRIPTION:
+    PARAMETERS :
+        acc_type = melee, ranged, throwing, ws, sc
+]]
+function Col_Accuracy(player_name, acc_type)
+
+    local column_width
+    local hits = Get_Data(player_name, acc_type, 'hits')
+    local attempts = Get_Data(player_name, acc_type, 'count')
+
+    if (Accuracy_Show_Attempts) then
+        column_width = Column_Widths['dmg']
+        return Format_Number(attempts, column_width)
+    else
+        column_width = Column_Widths['percent']
+        return Format_Percent(hits, attempts, column_width)
+    end
+
+end
+
+--[[
+    DESCRIPTION:
+    PARAMETERS :
+        damage_type = melee, ranged, throwing
+]]
+function Col_Crits(player_name, damage_type, percent)
+
+    local column_width
+    local crit_damage = Get_Data(player_name, damage_type, 'crit damage')
+
+    if (percent) then
+        column_width = Column_Widths['percent']
+        local total_damage = Get_Data(player_name, 'total', 'total')
+        return Format_Percent(crit_damage, total_damage, column_width)
+    else
+        if (Compact_Mode) then
+            column_width = Column_Widths['comp dmg']
+        else
+            column_width = Column_Widths['dmg']
+        end
+
+        return Format_Number(crit_damage, column_width)
+    end
+
+end
+
+--[[
+    DESCRIPTION: Accuracy for last X amount of attempts. Includes melee and ranged combined.
+    PARAMETERS :
+]]
+function Col_Running_Accuracy(player_name, column_width)
+
+    return Tally_Running_Accuracy(player_name, column_width)
+
+end
+
+--[[
+    DESCRIPTION:
+    PARAMETERS :
+        metric = total, min, max
+]]
+function Col_Single_Damage(player_name, action_name, metric, percent)
+
+    local column_width
+    local single_damage = Get_Data_Single(player_name, Focus_Skill, action_name, metric)
+
+    if (percent) then
+        column_width = Column_Widths['percent']
+        local total_damage = Get_Data(player_name, 'total', 'total')
+        return Format_Percent(single_damage, total_damage, column_width)
+    else
+        if (Compact_Mode) then
+            column_width = Column_Widths['comp dmg']
+        else
+            column_width = Column_Widths['dmg']
+        end
+
+        return Format_Number(single_damage, column_width)
+    end
+
+end
+
+--[[
+    DESCRIPTION:
+    PARAMETERS :
+]]
+function Col_Single_Attempts(player_name, action_name)
+    local column_width = Column_Widths['single']
+    local single_attempts = Get_Data_Single(player_name, Focus_Skill, action_name, 'count')
+    return Format_Number(single_attempts, column_width)
+end
+
+--[[
+    DESCRIPTION:
+    PARAMETERS :
+]]
+function Col_Single_Accuracy(player_name, action_name)
+    local column_width = Column_Widths['percent']
+    local single_hits  = Get_Data_Single(player_name, Focus_Skill, action_name, 'hits')
+    local single_attempts = Get_Data_Single(player_name, Focus_Skill, action_name, 'count')
+    return Format_Percent(single_hits, single_attempts, column_width)
+end
+
+--[[
+    DESCRIPTION:
+    PARAMETERS :
+]]
+function Col_Single_Average_Damage(player_name, action_name)
+
+    local column_width
+    if (Compact_Mode) then
+        column_width = Column_Widths['comp dmg']
+    else
+        column_width = Column_Widths['dmg']
+    end
+
+    local single_attempts = Get_Data_Single(player_name, Focus_Skill, action_name, 'count')
+    if (single_attempts == 0) then
+        return Format_Number(0, column_width)
+    end
+
+    local single_damage  = Get_Data_Single(player_name, Focus_Skill, action_name, 'total')
+    local single_average = tonumber(string.format("%d", single_damage / single_attempts))
+
+    return Format_Number(single_average, column_width)
+
 end
 
 --[[
@@ -271,105 +352,6 @@ function Col_Critical_Rate(player_name, count, column_width)
     end
 
     return critical_rate
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Melee_Damage(player_name, column_width)
-    local melee_damage = ''
-
-    if (not Total_Damage_Only) then
-        local melee_total = Get_Data(player_name, 'melee', 'total')
-        melee_damage = Format_Number(melee_total, column_width)
-    end
-
-    return melee_damage
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Weaponskill_Damage(player_name, column_width)
-    local ws_total = Get_Data(player_name, 'ws', 'total')
-    return Format_Number(ws_total, column_width)
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Skillchain_Damage(player_name, column_width)
-    local skillchain_damage = ''
-
-    if (Include_SC_Damage) then
-        local sc_total = Get_Data(player_name, 'sc', 'total')
-        skillchain_damage = Format_Number(sc_total, column_width)
-    end
-
-    return skillchain_damage
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Ranged_Damage(player_name, column_width)
-    local ranged_damage = ''
-
-    if (not Total_Damage_Only) then
-        local range_total = Get_Data(player_name, 'ranged', 'total')
-        ranged_damage = Format_Number(range_total, column_width)
-    end
-
-    return ranged_damage
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Magic_Damage(player_name, column_width)
-    local magic_damage = ''
-
-    if (not Total_Damage_Only) then
-        local magic_total = Get_Data(player_name, 'magic', 'total')
-        magic_damage = Format_Number(magic_total, column_width)
-    end
-
-    return magic_damage
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Ability_Damage(player_name, column_width)
-    local ability_damage = ''
-
-    if (not Total_Damage_Only) then
-        local ability_total = Get_Data(player_name, 'ability', 'total')
-        ability_damage = Format_Number(ability_total, column_width)
-    end
-
-    return ability_damage
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Col_Healing_Amount(player_name, column_width)
-    local healing_amount = ''
-
-    if (Show_Healing) then
-        local healing_total = Get_Data(player_name, 'healing', 'total')
-        healing_amount = Format_Number(healing_total, column_width)
-    end
-
-    return healing_amount
 end
 
 --[[
