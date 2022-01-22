@@ -6,8 +6,7 @@ Focus_Skill = 'ws'
     DESCRIPTION: Builds the focus window.
 ]]
 function Focus_Player()
-    local player_name = Focus_Entity
-    local dmg_col     = Column_Widths['dmg']
+    local player_name = Focused_Entity
 
     Focus_Layout = {}
 
@@ -16,6 +15,7 @@ function Focus_Player()
 
     Focus_Melee(player_name)
     Focus_Ranged(player_name)
+    Focus_Crits(player_name)
     Focus_WS_And_SC(player_name)
     Focus_Magic(player_name)
     Focus_Ability(player_name)
@@ -36,19 +36,19 @@ function Focus_Melee(player_name)
     if (melee_total > 0) then
 
         -- Header
-        local melee_header = Col_Header_Basic('Melee')        ..' '..
-                             Col_Header_Basic('% Dmg', true)  ..' '..
-                             Col_Header_Basic('% Acc', true)  ..' '..
-                             Col_Header_Basic('Crit')         ..' '..
-                             Col_Header_Basic('% Crit', true)
+        local melee_header = Col_Header_Basic('Melee')       ..' '..
+                             Col_Header_Basic('% Dmg', true) ..' '..
+                             Col_Header_Basic('T Acc', true) ..' '..
+                             Col_Header_Basic('P Acc', true) ..' '..
+                             Col_Header_Basic('S Acc', true)
         table.insert(Focus_Layout, melee_header)
 
         -- Construct string
-        local melee_data = Col_Damage(player_name, 'melee')       ..' '..
-                           Col_Damage(player_name, 'melee', true) ..' '..
-                           Col_Accuracy(player_name, 'melee')     ..' '..
-                           Col_Crits(player_name, 'melee')        ..' '..
-                           Col_Crits(player_name, 'melee', true)
+        local melee_data = Col_Damage(player_name, 'melee')           ..' '..
+                           Col_Damage(player_name, 'melee', true)     ..' '..
+                           Col_Accuracy(player_name, 'melee')         ..' '..
+                           Col_Accuracy(player_name, 'melee primary') ..' '..
+                           Col_Accuracy(player_name, 'melee secondary')
 
         -- Output
         table.insert(Focus_Layout, melee_data)
@@ -62,7 +62,7 @@ end
     PARAMETERS :
 ]]
 function Focus_Ranged(player_name)
-    local ranged_total       = Get_Data(player_name, 'ranged', 'total')
+    local ranged_total = Get_Data(player_name, 'ranged', 'total')
 
     if (ranged_total) > 0 then
 
@@ -78,11 +78,43 @@ function Focus_Ranged(player_name)
         local ranged_data = Col_Damage(player_name, 'ranged')       ..' '..
                             Col_Damage(player_name, 'ranged', true) ..' '..
                             Col_Accuracy(player_name, 'ranged')     ..' '..
-                            Col_Crits(player_name, 'ranged')        ..' '..
-                            Col_Crits(player_name, 'ranged', true)
+                            Col_Crit_Damage(player_name, 'ranged')        ..' '..
+                            Col_Crit_Damage(player_name, 'ranged', true)
 
         -- Output
         table.insert(Focus_Layout, ranged_data)
+        table.insert(Focus_Layout, '-------------------------------------------------------')
+    end
+
+end
+
+--[[
+    DESCRIPTION:
+    PARAMETERS :
+]]
+function Focus_Crits(player_name)
+    local melee_crits = Get_Data(player_name, 'melee', 'crits')
+    local ranged_crits = Get_Data(player_name, 'ranged', 'crits')
+
+    if (melee_crits > 0) or (ranged_crits > 0) then
+
+        -- Header
+        local crits_header = Col_Header_Basic('Crits')        ..' '..
+                             Col_Header_Basic('% Dmg',  true) ..' '..
+                             Col_Header_Basic('T Rate', true) ..' '..
+                             Col_Header_Basic('M Rate', true) ..' '..
+                             Col_Header_Basic('R Rate', true)
+        table.insert(Focus_Layout, crits_header)
+
+        -- Construct string
+        local crit_data = Col_Crit_Damage(player_name, 'combined')       ..' '..
+                          Col_Crit_Damage(player_name, 'combined', true) ..' '..
+                          Col_Crit_Rate(player_name, 'combined') ..' '..
+                          Col_Crit_Rate(player_name, 'melee')    ..' '..
+                          Col_Crit_Rate(player_name, 'ranged')
+
+        -- Output
+        table.insert(Focus_Layout, crit_data)
         table.insert(Focus_Layout, '-------------------------------------------------------')
     end
 

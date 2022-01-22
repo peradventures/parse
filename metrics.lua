@@ -16,6 +16,7 @@ Skill_List = {
     'healing',
     'pet',
     'death',
+	'default',
 }
 
 Metric_List = {

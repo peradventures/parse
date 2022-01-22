@@ -29,6 +29,8 @@ function Melee_Damage(result, player_name, target_name)
     local damage = result.param
     local throwing = false
 
+    local discrete_melee_type = Get_Discrete_Melee_Type(animation_id)
+
     local damage_bundle = {
         value = damage,
         player_name = player_name,
@@ -49,51 +51,35 @@ function Melee_Damage(result, player_name, target_name)
 
     Update_Data('inc', damage_bundle, 'total', 'total')
     Update_Data('inc', damage_bundle, 'total_no_sc', 'total')
+    Update_Data('inc', damage_bundle, discrete_melee_type, 'total')
+    Update_Data('inc', inc_bundle, discrete_melee_type, 'count')
 
     -- MELEE ------------------------------------------------------------------
+    if (animation_id >= 0) and (animation_id < 4) then
+        Update_Data('inc', damage_bundle, 'melee', 'total')
+        Update_Data('inc', inc_bundle,    'melee', 'count')
 
-    -- Main Hand
-    if (animation_id == 0) then
-        Update_Data('inc', damage_bundle, 'melee',         'total')
-        Update_Data('inc', damage_bundle, 'melee primary', 'total')
-
-    -- Off Hand
-    elseif (animation_id == 1) then
-        Update_Data('inc', damage_bundle, 'melee',           'total')
-        Update_Data('inc', damage_bundle, 'melee secondary', 'total')
-
-    -- Kicks
-    elseif (animation_id == 2) or (animation_id == 3) then
-        Update_Data('inc', damage_bundle, 'melee',       'total')
-        Update_Data('inc', damage_bundle, 'melee kicks', 'total')
-
-    -- RANGED -----------------------------------------------------------------
-
-    -- Throwing
+    -- THROWING ---------------------------------------------------------------
     elseif (animation_id == 4) then
         throwing = true
-        Update_Data('inc', damage_bundle, 'ranged',   'total')
-        Update_Data('inc', damage_bundle, 'throwing', 'total')
+        Update_Data('inc', damage_bundle, 'ranged', 'total')
+        Update_Data('inc', inc_bundle,    'ranged', 'count')
 
+    -- UNHANDLED ANIMATION ----------------------------------------------------
     else
         Add_Message_To_Chat('W', 'Melee_Damage^handling', 'Unhandled animation: '..tostring(animation_id))
-
     end
 
     -- MIN/MAX ----------------------------------------------------------------
-
     if throwing then
-        Update_Data('inc', inc_bundle, 'ranged', 'count')
         if (damage < Get_Data(player_name, 'ranged', 'min')) then Update_Data('set', damage_bundle, 'ranged', 'min') end
         if (damage > Get_Data(player_name, 'ranged', 'max')) then Update_Data('set', damage_bundle, 'ranged', 'max') end
     else
-        Update_Data('inc', inc_bundle, 'melee', 'count')
         if (damage < Get_Data(player_name, 'melee', 'min')) then Update_Data('set', damage_bundle, 'melee', 'min') end
         if (damage > Get_Data(player_name, 'melee', 'max')) then Update_Data('set', damage_bundle, 'melee', 'max') end
     end
 
     -- ENSPELL ----------------------------------------------------------------
-
     local enspell_damage = result.add_effect_param
 
     if (enspell_damage > 0) then
@@ -114,21 +100,22 @@ function Melee_Damage(result, player_name, target_name)
     end
 
     -- NUANCE -----------------------------------------------------------------
-
     local message_id = result.message
 
     -- Hit
-    if (message_id == 1) then 
+    if (message_id == 1) then
         Update_Data('inc', inc_bundle, 'melee', 'hits')
+        Update_Data('inc', inc_bundle, discrete_melee_type, 'hits')
         Running_Accuracy(player_name, true)
 
     -- Healing with melee attacks
     elseif (message_id == 3) or (message_id == 373) then
         Update_Data('inc', inc_bundle, 'melee', 'hits')
+        Update_Data('inc', inc_bundle, discrete_melee_type, 'hits')
         Update_Data('inc', damage_bundle, 'melee', 'mob heal')
 
     -- Misses
-    elseif (message_id == 15) then 
+    elseif (message_id == 15) then
         Update_Data('inc', inc_bundle, 'melee', 'misses')
         Running_Accuracy(player_name, false)
 
@@ -139,15 +126,18 @@ function Melee_Damage(result, player_name, target_name)
     -- Attack absorbed by shadows
     elseif (message_id == 31) then
         Update_Data('inc', inc_bundle, 'melee', 'hits')
+        Update_Data('inc', inc_bundle, discrete_melee_type, 'hits')
         Update_Data('inc', inc_bundle, 'melee', 'shadows')
 
     -- Attack dodged (Perfect Dodge) / Remove the count so perfect dodge doesn't count.
     elseif (message_id == 32) then
         Update_Data('inc', dec_bundle, 'melee', 'count')
+        Update_Data('inc', dec_bundle, discrete_melee_type, 'count')
 
     -- Critical Hits
     elseif (message_id == 67) then 
         Update_Data('inc', inc_bundle, 'melee', 'hits')
+        Update_Data('inc', inc_bundle, discrete_melee_type, 'hits')
         Update_Data('inc', inc_bundle, 'melee', 'crits')
         Update_Data('inc', damage_bundle, 'melee', 'crit damage')
         Running_Accuracy(player_name, true)
@@ -174,14 +164,12 @@ function Melee_Damage(result, player_name, target_name)
         Update_Data('inc', inc_bundle, 'ranged', 'hits')
         Running_Accuracy(player_name, true)
 
-    else 
+    else
         Add_Message_To_Battle_Log(player_name, 'Att. nuance '..message_id) end
 
     -----------------------------------------------------------------------
 
-    local spikes = result.spike_effect_effect 
-    --Add_Message_To_Chat('W', 'PARSE | Melee_Damage^handling')
-    --Add_Message_To_Chat(nil, 'Unhandled spike effect '..tostring(spikes))
+    local spikes = result.spike_effect_effect
 
     return damage
 end

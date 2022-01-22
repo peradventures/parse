@@ -208,38 +208,17 @@ function Col_Accuracy(player_name, acc_type)
     local hits = Get_Data(player_name, acc_type, 'hits')
     local attempts = Get_Data(player_name, acc_type, 'count')
 
-    if (Accuracy_Show_Attempts) then
-        column_width = Column_Widths['dmg']
-        return Format_Number(attempts, column_width)
-    else
-        column_width = Column_Widths['percent']
-        return Format_Percent(hits, attempts, column_width)
+    local color = C_White
+    if (hits == 0) then
+        color = C_Gray
     end
 
-end
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-        damage_type = melee, ranged, throwing
-]]
-function Col_Crits(player_name, damage_type, percent)
-
-    local column_width
-    local crit_damage = Get_Data(player_name, damage_type, 'crit damage')
-
-    if (percent) then
-        column_width = Column_Widths['percent']
-        local total_damage = Get_Data(player_name, 'total', 'total')
-        return Format_Percent(crit_damage, total_damage, column_width)
+    if (Accuracy_Show_Attempts) then
+        column_width = Column_Widths['dmg']
+        return Format_Number(attempts, column_width, color)
     else
-        if (Compact_Mode) then
-            column_width = Column_Widths['comp dmg']
-        else
-            column_width = Column_Widths['dmg']
-        end
-
-        return Format_Number(crit_damage, column_width)
+        column_width = Column_Widths['percent']
+        return Format_Percent(hits, attempts, column_width, color)
     end
 
 end
@@ -251,6 +230,60 @@ end
 function Col_Running_Accuracy(player_name, column_width)
 
     return Tally_Running_Accuracy(player_name, column_width)
+
+end
+
+
+--[[
+    DESCRIPTION:
+    PARAMETERS :
+        damage_type = melee, ranged, throwing
+]]
+function Col_Crit_Damage(player_name, damage_type, percent)
+
+    local crit_damage
+    if (damage_type == 'combined') then
+        local melee_crits  = Get_Data(player_name, 'melee',  'crit damage')
+        local ranged_crits = Get_Data(player_name, 'ranged', 'crit damage')
+        crit_damage = melee_crits + ranged_crits
+    else
+        crit_damage = Get_Data(player_name, damage_type, 'crit damage')
+    end
+
+    local column_width
+    if (percent) then
+        column_width = Column_Widths['percent']
+        local total_damage = Get_Data(player_name, 'total', 'total')
+        return Format_Percent(crit_damage, total_damage, column_width, C_Gray)
+    else
+        if (Compact_Mode) then
+            column_width = Column_Widths['comp dmg']
+        else
+            column_width = Column_Widths['dmg']
+        end
+
+        return Format_Number(crit_damage, column_width, C_Gray)
+    end
+
+end
+
+function Col_Crit_Rate(player_name, damage_type)
+
+    local crits, attempts
+    if (damage_type == 'combined') then
+        local melee_crits     = Get_Data(player_name, 'melee', 'crits')
+        local melee_attempts  = Get_Data(player_name, 'melee', 'count')
+        local ranged_crits    = Get_Data(player_name, 'ranged', 'crits')
+        local ranged_attempts = Get_Data(player_name, 'ranged', 'count')
+        crits = melee_crits + ranged_crits
+        attempts = melee_attempts + ranged_attempts
+    else
+        crits = Get_Data(player_name, damage_type, 'crits')
+        attempts = Get_Data(player_name, damage_type, 'count')
+    end
+
+    local column_width = Column_Widths['percent']
+    return Format_Percent(crits, attempts, column_width, C_Gray)
 
 end
 

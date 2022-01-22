@@ -6,7 +6,7 @@ Blog = {}
 Blog_Length  = 13
 Show_Blog    = true
 Blog_Type    = 'log'
-Focus_Entity = 'Amarara'
+Focused_Entity = 'Amarara'
 Blog_Default_Color = C_White
 Show_Melee   = false
 

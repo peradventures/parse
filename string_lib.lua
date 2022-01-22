@@ -50,12 +50,12 @@ function Format_Number(number, length, color, line_color, align, force_long_form
     return display_number
 end
 
---[[
-    DESCRIPTION:    Calculates a percent
-    PARAMETERS :
-        num         Numerator
-        denom       Denominator
-]]
+---Calculates and formats a percent.
+---@param num        number The numerator for the percent.
+---@param denom      number The denominator for the percent.
+---@param length     number Final width of the string. Truncates and appends blanks as needed. Right aligned by default.
+---@param color      string Color of the percent.
+---@param line_color string Color of the surrounding text. It could be the same color or different.
 function Format_Percent(num, denom, length, color, line_color)
 
     if (not length) then length = 5 end

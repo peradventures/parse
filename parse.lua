@@ -178,7 +178,7 @@ function(command, ...)
                 Focus_Skill = 'magic'
                 Add_Message_To_Chat('A', 'Addon Command^parse', 'Focus type set to: Magic')
             else
-                Focus_Entity = args[1]
+                Focused_Entity = args[1]
                 Blog_Type = 'focus'
                 Add_Message_To_Chat('A', 'Addon Command^parse', 'Focusing on '..tostring(args[1]))
             end
