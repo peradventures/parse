@@ -1,6 +1,22 @@
--- Focus window is shared with the battle log. It is initialized in battle_log.lua
+Focus_Window, Focus_Content  = Create_Window(700, 100, 10, nil, 255)
+Texts.stroke_width(Focus_Window, 2)
+Texts.stroke_color(Focus_Window, 28, 28, 28)
+Texts.bold(Focus_Window, true)
 
-Focus_Skill = 'ws'
+Show_Focus  = false
+Focused_Skill  = 'ws'
+Focused_Entity = 'Amarara'
+
+
+--[[
+    DESCRIPTION:    Refresh the focus window.
+]]
+function Refresh_Focus_Window()
+    if (Show_Focus) then Focus_Window:show() else Focus_Window:hide() end
+    Focus_Player()
+    Focus_Content.token = Concat_Strings(Focus_Layout)
+    Focus_Window:update(Focus_Content)
+end
 
 --[[
     DESCRIPTION: Builds the focus window.
@@ -11,7 +27,7 @@ function Focus_Player()
     Focus_Layout = {}
 
     table.insert(Focus_Layout, player_name..' ('..Col_Grand_Total(player_name)..')')
-    table.insert(Focus_Layout, '-------------------------------------------------------')
+    table.insert(Focus_Layout, '')
 
     Focus_Melee(player_name)
     Focus_Ranged(player_name)
@@ -52,7 +68,7 @@ function Focus_Melee(player_name)
 
         -- Output
         table.insert(Focus_Layout, melee_data)
-        table.insert(Focus_Layout, '-------------------------------------------------------')
+        table.insert(Focus_Layout, '')
     end
 
 end
@@ -83,7 +99,7 @@ function Focus_Ranged(player_name)
 
         -- Output
         table.insert(Focus_Layout, ranged_data)
-        table.insert(Focus_Layout, '-------------------------------------------------------')
+        table.insert(Focus_Layout, '')
     end
 
 end
@@ -115,7 +131,7 @@ function Focus_Crits(player_name)
 
         -- Output
         table.insert(Focus_Layout, crit_data)
-        table.insert(Focus_Layout, '-------------------------------------------------------')
+        table.insert(Focus_Layout, '')
     end
 
 end
@@ -146,7 +162,7 @@ function Focus_WS_And_SC(player_name)
 
         -- Output
         table.insert(Focus_Layout, ws_data)
-        table.insert(Focus_Layout, '-------------------------------------------------------')
+        table.insert(Focus_Layout, '')
     end
 
 end
@@ -171,7 +187,7 @@ function Focus_Magic(player_name)
 
         -- Output
         table.insert(Focus_Layout, magic_data)
-        table.insert(Focus_Layout, '-------------------------------------------------------')
+        table.insert(Focus_Layout, '')
     end
 
 end
@@ -196,7 +212,7 @@ function Focus_Ability(player_name)
 
         -- Output
         table.insert(Focus_Layout, ability_data)
-        table.insert(Focus_Layout, '-------------------------------------------------------')
+        table.insert(Focus_Layout, '')
     end
 
 end
@@ -221,7 +237,7 @@ function Focus_Healing(player_name)
 
         -- Output
         table.insert(Focus_Layout, healing_data)
-        table.insert(Focus_Layout, '-------------------------------------------------------')
+        table.insert(Focus_Layout, '')
     end
 
 end
@@ -230,7 +246,7 @@ end
     DESCRIPTION:Builds the focus window.
 ]]
 function Single_Data(player_name)
-    if (not Focus_Skill) then Focus_Skill = 'ws' end
+    if (not Focused_Skill) then Focused_Skill = 'ws' end
 
     local header
     local name_col   = Column_Widths['name']
@@ -249,8 +265,8 @@ function Single_Data(player_name)
     table.insert(Focus_Layout, header)
 
     -- Error Protection
-    if (not Skill_Data[Focus_Skill]) then return end
-    if (not Skill_Data[Focus_Skill][player_name]) then return end
+    if (not Skill_Data[Focused_Skill]) then return end
+    if (not Skill_Data[Focused_Skill][player_name]) then return end
 
     Sort_Single_Damage(player_name)
 
@@ -274,7 +290,14 @@ function Single_Row(player_name, action_name)
     row = row..Col_Single_Attempts(player_name, action_name)
     row = row..Col_Single_Accuracy(player_name, action_name)
     row = row..Col_Single_Average_Damage(player_name, action_name)
-    row = row..Col_Single_Damage(player_name, action_name, 'min')
+
+    local min = Get_Data_Single(player_name, Focused_Skill, action_name, 'min')
+    if (min == 100000) then
+        row = row..Col_Single_Damage(player_name, action_name, 'ignore')
+    else
+        row = row..Col_Single_Damage(player_name, action_name, 'min')
+    end
+
     row = row..Col_Single_Damage(player_name, action_name, 'max')
 
     table.insert(Focus_Layout, row)

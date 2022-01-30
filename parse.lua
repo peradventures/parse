@@ -31,6 +31,7 @@ Res     = require('resources')
 Texts   = require('texts')
 Packets = require('packets')
 
+-- Debugging
 LUA_Name = 'PARSE'
 
 require('window')
@@ -40,15 +41,18 @@ require('string_lib')
 require('lib')
 require('metrics')
 require('party')
-require('handling')
 require('battle_log')
+require('handling')
 require('focus_window')
 require('columns')
 require('horse_race_window')
 require('packet_handling')
+require('commands')
 
+-- Monster specific damage filter
 Mob_Filter = nil
 
+-- Performance
 Window_Refresh_Throttling = 10
 Window_Refresh_Count = 0
 
@@ -64,6 +68,7 @@ function()
 
     Refresh_Horse_Race()
     Refresh_Blog()
+    Refresh_Focus_Window()
 end)
 
 --[[
@@ -79,8 +84,16 @@ function(act)
     local actor = Get_Entity_Data(act.actor_id)
     if (not actor) then return end
 
-    -- Record all offensive actions from players in party or alliance
-    local log_offense = (actor.is_party or actor.is_alliance)
+    -- Check if the actor is a pet
+    local owner_mob = Pet_Owner(act)
+
+    -- Record all offensive actions from players or pets in party or alliance
+    local log_offense = false
+    if (owner_mob) then
+        log_offense = (owner_mob.in_party or owner_mob.in_alliance)
+    else
+        log_offense = (actor.is_party or actor.is_alliance)
+    end
 
     if     (act.category ==  1) then Melee_Attack(act, actor, log_offense)
     elseif (act.category ==  2) then Ranged_Attack(act, actor, log_offense)
@@ -91,7 +104,7 @@ function(act)
     elseif (act.category ==  7) then -- Do nothing (Begin WS)
     elseif (act.category ==  8) then -- Do nothing (Begin Spellcasting)
     elseif (act.category ==  9) then -- Do nothing (Begin or Interrupt Item Usage)
-    elseif (act.category == 11) then -- Do nothing (Finish Monster TP Move)
+    elseif (act.category == 11) then Finish_Monster_TP_Move(act, actor, log_offense)
     elseif (act.category == 12) then -- Do nothing (Begin Ranged Attack)
     elseif (act.category == 13) then Pet_Ability(act, actor, log_offense)
     elseif (act.category == 14) then -- Do nothing (Unblinkable Job Ability)
@@ -127,7 +140,7 @@ function (actor_id, target_id, actor_index, target_index, message_id, param_1, p
 
 end)
 
-windower.register_event('addon command', 
+windower.register_event('addon command',
 function(command, ...)
     local args = {...}
 
@@ -136,110 +149,29 @@ function(command, ...)
         if command:lower() == 'load' then -- Do nothing
 
         -- Turn windows on or off
-        elseif command:lower() == 'show' then
+        elseif (command:lower() == 'show') or (command:lower() == 'hide') then Toggle_Window(args)
 
-            if     (args[1]:lower() == 'blog') then
-                Toggle_Blog()
-            elseif (args[1]:lower() == 'horse') then
-                Toggle_Horse_Race()
-            elseif (args[1]:lower() == 'error') then
-                Show_Error = not Show_Error
-                Add_Message_To_Chat('A', 'Addon Command^parse', 'Show_Error is now '..tostring(Show_Error))
-            elseif (args[1]:lower() == 'warning') then
-                Show_Warning = not Show_Warning
-                Add_Message_To_Chat('A', 'Addon Command^parse', 'Show_Warning is now '..tostring(Show_Warning))
-            else
-                Add_Message_To_Chat('A', 'Addon Command^parse', tostring(args[1])..' is an unknown window and cannot be toggled.')
-            end
+        -- Determine what shows up in the battle log
+        elseif (command:lower() == 'log') then Set_Battle_Log_Filters(args)
 
         -- Reset the parser
-        elseif (command:lower() == 'reset') then
-            Reset_Parser()
+        elseif (command:lower() == 'reset') then Reset_Parser()
 
         -- Commands for the Focus window
-        elseif (command:lower() == 'focus') then
-
-            if     (args[1] == nil)  then
-                Blog_Type = 'log' 
-                Add_Message_To_Chat('A', 'Addon Command^parse', 'Switching back to the battle log.')
-            elseif (args[1]:lower() == 'ws') then
-                Focus_Skill = 'ws'
-                Add_Message_To_Chat('A', 'Addon Command^parse', 'Focus type set to: Weaponskill')
-            elseif (args[1]:lower() == 'sc') then
-                Focus_Skill = 'sc'
-                Add_Message_To_Chat('A', 'Addon Command^parse', 'Focus type set to: Skillchain')
-            elseif (args[1]:lower() == 'ability') then
-                Focus_Skill = 'ability'
-                Add_Message_To_Chat('A', 'Addon Command^parse', 'Focus type set to: Ability')
-            elseif (args[1]:lower() == 'healing') then
-                Focus_Skill = 'healing'
-                Add_Message_To_Chat('A', 'Addon Command^parse', 'Focus type set to: Healing')
-            elseif (args[1]:lower() == 'magic') then
-                Focus_Skill = 'magic'
-                Add_Message_To_Chat('A', 'Addon Command^parse', 'Focus type set to: Magic')
-            else
-                Focused_Entity = args[1]
-                Blog_Type = 'focus'
-                Add_Message_To_Chat('A', 'Addon Command^parse', 'Focusing on '..tostring(args[1]))
-            end
-
-            Refresh_Blog()
+        elseif (command:lower() == 'focus') then Focus_Target(args)
 
         -- Set the mob filtering
-        elseif (command:lower() == 'mob') then
-
-            if (args[1] == nil) then
-                Mob_Filter = nil
-                Add_Message_To_Chat('A', 'Addon Command^parse', 'Mob filter cleared.')
-            else
-                Mob_Filter = Build_Arg_String(args)
-                Add_Message_To_Chat('A', 'Addon Command^parse', 'Mob filter set to '..Mob_Filter)
-            end
+        elseif (command:lower() == 'mob') then Set_Mob_Filter(args)
 
         -- Set the Top # Ranking
-        elseif (command:lower() == 'top') then
-
-            if (args[1] == nil) then
-                Top_Rank = Top_Rank_Default
-                Add_Message_To_Chat('A', 'Addon Command^parse', 'Setting top ranking limit to the default: '..tostring(Top_Rank_Default))
-            else
-                Top_Rank = tonumber(args[1])
-                Add_Message_To_Chat('A', 'Addon Command^parse', 'Setting top ranking limit to: '..args[1])
-            end
-
-        -- Blog functions
-        elseif (command:lower() == 'log') then
-            Blog_Type = 'log'
-            Refresh_Blog() 
-            Add_Message_To_Chat('A', 'Addon Command^parse', 'Focus set to log.')
-
-        -- Horse Race Formatting Functions
-        elseif (command:lower() == 'melee')      then Show_Melee        = not Show_Melee
-        elseif (command:lower() == 'compact')    then Compact_Mode      = not Compact_Mode
-        elseif (command:lower() == 'crit')       then Show_Crit         = not Show_Crit
-        elseif (command:lower() == 'acc')        then Show_Total_Acc    = not Show_Total_Acc
-        elseif (command:lower() == 'sc')         then Include_SC_Damage = not Include_SC_Damage
-        elseif (command:lower() == 'percent')    then Show_Percent      = not Show_Percent           -- Total Damage Percent
-        elseif (command:lower() == 'combine')    then Total_Damage_Only = not Total_Damage_Only
-        elseif (command:lower() == 'healing')    then Show_Healing      = not Show_Healing
-        elseif (command:lower() == 'helptext')   then Show_Help_Text    = not Show_Help_Text
-        elseif (command:lower() == 'screenshot') then
-            Show_Crit = true
-            Include_SC_Damage = true
-            Compact_Mode = false
-            Show_Percent = true
-            Show_Deaths = true
-            Show_Help_Text = true
-        elseif (command:lower() == 'parse') then
-            Show_Crit = false
-            Include_SC_Damage = false
-            Compact_Mode = true
-            Show_Percent = false
+        elseif (command:lower() == 'top') then Set_Horse_Race_Display_Limit(args)
 
         -- Data functions (Not Implemented)
         elseif (command:lower() == 'snapshot') then -- Create a snapshot of the currently held data
 
         else
-            Add_Message_To_Chat('A', 'Addon Command^parse', 'Hud command not recognized. Command: '..command) end
+            Toggle_Formatting_Config(command)
+        end
+
     end
 end)

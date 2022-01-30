@@ -14,13 +14,6 @@ end
 --[[
     DESCRIPTION:
 ]]
-function Col_Header_Player_Name(player_name)
-
-end
-
---[[
-    DESCRIPTION:
-]]
 function Col_Header_Basic(text, percent, color, line_color)
 
     local column_width
@@ -61,18 +54,15 @@ end
 function Col_Header_Crits(column_width)
     local crit_header = ''
 
-    if (Show_Crit) then
+    if (Combine_Crit) then
 
-        if (Combine_Crit) then
+        crit_header = String_Length('Crits', column_width, true)
 
-            crit_header = String_Length('Crits', column_width, true)
+    else
 
-        else
+        crit_header = String_Length('M. Crit', column_width, true)
+        crit_header = String_Length('R. Crit', column_width, true)
 
-            crit_header = String_Length('M. Crit', column_width, true)
-            crit_header = String_Length('R. Crit', column_width, true)
-
-        end
     end
 
     return crit_header
@@ -117,14 +107,7 @@ end
     PARAMETERS :
 ]]
 function Col_Rank(rank, player_name, column_width)
-    local color
-
-    if Is_Me(player_name) then
-        color = C_Bright_Green
-    else
-        color = C_White
-    end
-
+    local color = Col_Color(Is_Me(player_name), C_Bright_Green, C_White)
     return color..' '..rank..'.  '..String_Length(player_name, column_width)
 end
 
@@ -141,10 +124,7 @@ function Col_Grand_Total(player_name, percent)
         grand_total = Get_Data(player_name, 'total_no_sc', 'total')
     end
 
-    local color
-    if (grand_total == 0) then
-        color = C_Gray
-    end
+    local color = Col_Color((grand_total == 0), C_Gray)
 
     local column_width
     if (percent) then
@@ -155,6 +135,7 @@ function Col_Grand_Total(player_name, percent)
         local party_damage = Total_Party_Damage(party)
 
         return Format_Percent(grand_total, party_damage, column_width, color)
+
     else
         if (Compact_Mode) then
             column_width = Column_Widths['comp dmg']
@@ -176,10 +157,7 @@ function Col_Damage(player_name, damage_type, percent)
     local column_width
     local focused_damage = Get_Data(player_name, damage_type, 'total')
 
-    local color
-    if (focused_damage == 0) then
-        color = C_Gray
-    end
+    local color = Col_Color((focused_damage == 0), C_Gray)
 
     if (percent) then
         column_width = Column_Widths['percent']
@@ -204,15 +182,22 @@ end
 ]]
 function Col_Accuracy(player_name, acc_type)
 
-    local column_width
-    local hits = Get_Data(player_name, acc_type, 'hits')
-    local attempts = Get_Data(player_name, acc_type, 'count')
-
-    local color = C_White
-    if (hits == 0) then
-        color = C_Gray
+    local hits, attempts
+    if (acc_type == 'combined') then
+        local melee_hits = Get_Data(player_name, 'melee', 'hits')
+        local melee_attempts = Get_Data(player_name, 'melee', 'count')
+        local ranged_hits = Get_Data(player_name, 'ranged', 'hits')
+        local ranged_attempts = Get_Data(player_name, 'ranged', 'count')
+        hits = melee_hits + ranged_hits
+        attempts = melee_attempts + ranged_attempts
+    else
+        hits = Get_Data(player_name, acc_type, 'hits')
+        attempts = Get_Data(player_name, acc_type, 'count')
     end
 
+    local color = Col_Color((hits == 0), C_Gray)
+
+    local column_width
     if (Accuracy_Show_Attempts) then
         column_width = Column_Widths['dmg']
         return Format_Number(attempts, column_width, color)
@@ -295,12 +280,21 @@ end
 function Col_Single_Damage(player_name, action_name, metric, percent)
 
     local column_width
-    local single_damage = Get_Data_Single(player_name, Focus_Skill, action_name, metric)
+
+    local single_damage
+    if (metric == 'ignore') then
+        single_damage = 0
+    else
+        single_damage = Get_Data_Single(player_name, Focused_Skill, action_name, metric)
+    end
+
+    local color = Col_Color((single_damage == 0), C_Gray)
 
     if (percent) then
         column_width = Column_Widths['percent']
         local total_damage = Get_Data(player_name, 'total', 'total')
         return Format_Percent(single_damage, total_damage, column_width)
+
     else
         if (Compact_Mode) then
             column_width = Column_Widths['comp dmg']
@@ -308,7 +302,7 @@ function Col_Single_Damage(player_name, action_name, metric, percent)
             column_width = Column_Widths['dmg']
         end
 
-        return Format_Number(single_damage, column_width)
+        return Format_Number(single_damage, column_width, color)
     end
 
 end
@@ -319,7 +313,7 @@ end
 ]]
 function Col_Single_Attempts(player_name, action_name)
     local column_width = Column_Widths['single']
-    local single_attempts = Get_Data_Single(player_name, Focus_Skill, action_name, 'count')
+    local single_attempts = Get_Data_Single(player_name, Focused_Skill, action_name, 'count')
     return Format_Number(single_attempts, column_width)
 end
 
@@ -329,9 +323,11 @@ end
 ]]
 function Col_Single_Accuracy(player_name, action_name)
     local column_width = Column_Widths['percent']
-    local single_hits  = Get_Data_Single(player_name, Focus_Skill, action_name, 'hits')
-    local single_attempts = Get_Data_Single(player_name, Focus_Skill, action_name, 'count')
-    return Format_Percent(single_hits, single_attempts, column_width)
+    local single_hits  = Get_Data_Single(player_name, Focused_Skill, action_name, 'hits')
+    local color        = Col_Color((single_hits == 0), C_Gray)
+
+    local single_attempts = Get_Data_Single(player_name, Focused_Skill, action_name, 'count')
+    return Format_Percent(single_hits, single_attempts, column_width, color)
 end
 
 --[[
@@ -347,15 +343,17 @@ function Col_Single_Average_Damage(player_name, action_name)
         column_width = Column_Widths['dmg']
     end
 
-    local single_attempts = Get_Data_Single(player_name, Focus_Skill, action_name, 'count')
+    local single_attempts = Get_Data_Single(player_name, Focused_Skill, action_name, 'count')
     if (single_attempts == 0) then
-        return Format_Number(0, column_width)
+        return Format_Number(0, column_width, C_Gray)
     end
 
-    local single_damage  = Get_Data_Single(player_name, Focus_Skill, action_name, 'total')
+    local single_damage  = Get_Data_Single(player_name, Focused_Skill, action_name, 'total')
+    local color = Col_Color((single_damage == 0), C_Gray)
+
     local single_average = tonumber(string.format("%d", single_damage / single_attempts))
 
-    return Format_Number(single_average, column_width)
+    return Format_Number(single_average, column_width, color)
 
 end
 
@@ -392,12 +390,22 @@ end
     PARAMETERS :
 ]]
 function Col_Deaths(player_name, column_width)
-    local death_count = ''
+    local death_count = Get_Data(player_name, 'death', 'count')
+    local color = Col_Color((death_count == 0), C_Gray)
 
-    if (Show_Deaths) then
-        local death_data = Get_Data(player_name, 'death', 'count')
-        death_count = Format_Number(death_data, column_width)
+    return Format_Number(death_count, Column_Widths['single'], color)
+end
+
+--[[
+    DESCRIPTION:
+    PARAMETERS :
+]]
+function Col_Color(condition, true_color, false_color)
+
+    if (condition) then
+        return true_color
+    else
+        return false_color
     end
 
-    return death_count
 end

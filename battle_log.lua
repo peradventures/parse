@@ -1,41 +1,32 @@
 Blog_Window,  Blog_Content  = Create_Window(30, 410, 10, nil, 0)
 Texts.stroke_width(Blog_Window, 2)
 Texts.stroke_color(Blog_Window, 28, 28, 28)
+Texts.bold(Blog_Window, true)
 
 Blog = {}
 Blog_Length  = 13
 Show_Blog    = true
-Blog_Type    = 'log'
-Focused_Entity = 'Amarara'
+
+Log_Melee    = false
+Log_Ranged   = false
+Log_WS       = true
+Log_SC       = true
+Log_Magic    = true
+Log_Abiilty  = false
+Log_Pet      = false
+Log_Healing  = false
+Log_Deaths   = false
+
 Blog_Default_Color = C_White
-Show_Melee   = false
+
 
 --[[
     DESCRIPTION:    Refresh the battle log.
 ]]
 function Refresh_Blog()
-    local info = windower.ffxi.get_info()
-
     if (Show_Blog) then Blog_Window:show() else Blog_Window:hide() end
-
-    if Blog_Type == 'log' then
-        Blog_Content.token = Concat_Strings(Blog)
-        Blog_Window:update(Blog_Content)
-
-    else
-        Focus_Player()
-        Blog_Content.token = Concat_Strings(Focus_Layout)
-        Blog_Window:update(Blog_Content)
-    end
-end
-
---[[
-    DESCRIPTION:    Turn the Blog on or off (visually).
-]]
-function Toggle_Blog()
-    Show_Blog  = not Show_Blog
-    Refresh_Blog()
-    Add_Message_To_Chat('A', 'Toggle_Blog^battle_log', 'Battle Log visibility is now: ' ..tostring(Show_Blog))
+    Blog_Content.token = Concat_Strings(Blog)
+    Blog_Window:update(Blog_Content)
 end
 
 --[[
@@ -48,7 +39,7 @@ end
         tp_value   : How much TP was used by the weaponskill
 ]]
 function Add_Message_To_Battle_Log(player_name, action_name, damage, line_color, tp_value, action_type, action_data)
-    
+
     -- If the blog is at max length then we will need to remove the last element
     if Count_Table_Elements(Blog) >= Blog_Length then table.remove(Blog, Blog_Length) end
 
@@ -100,7 +91,7 @@ function Blog_Damage(damage)
     else
         damage_string = Format_Number(damage, 6)
     end
-    
+
     return damage_string
 end
 
@@ -165,4 +156,34 @@ function Elemental_Coloring(action_data)
     end
 
     return color
+end
+
+--[[
+    DESCRIPTION:
+]]
+function Set_Log_Show_Defaults()
+    Log_Melee    = false
+    Log_Ranged   = false
+    Log_WS       = true
+    Log_SC       = true
+    Log_Magic    = true
+    Log_Abiilty  = false
+    Log_Pet      = false
+    Log_Healing  = false
+    Log_Deaths   = false
+end
+
+--[[
+    DESCRIPTION:
+]]
+function Set_Log_Show_All()
+    Log_Melee    = true
+    Log_Ranged   = true
+    Log_WS       = true
+    Log_SC       = true
+    Log_Magic    = true
+    Log_Abiilty  = true
+    Log_Pet      = true
+    Log_Healing  = true
+    Log_Deaths   = true
 end

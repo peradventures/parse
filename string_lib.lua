@@ -63,8 +63,8 @@ function Format_Percent(num, denom, length, color, line_color)
     if (not line_color) then line_color = C_White end
 
     -- Can't divide by zero
-    if (denom == 0) then
-        return Format_String('0', length, line_color, line_color, true)
+    if (denom == 0) or (denom == nil) then
+        return Format_String('0', length, color, line_color, true)
     end
 
     local percent = (num / denom) * 100

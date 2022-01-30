@@ -84,10 +84,16 @@ Mob_Ability_Filter = {
 -- weapon_skills.lua is missing some nodes
 WS_Filter = {
     [260]  = {id = 260,  english = "Spirit Jump"},
-    --[261]  = {id = 261,  english = "Soul Jump"},
     [293]  = {id = 293,  english = "Soul Jump"},
     [329]  = {id = 329,  english = "Intervene"},
     [3502] = {id = 3502, english = "Nott"}
+}
+
+WS_Abilities = {
+    [66]   = {id = 66,   english = "Jump"},
+    [67]   = {id = 67,   english = "High Jump"},
+    [260]  = {id = 260,  english = "Spirit Jump"},
+    [293]  = {id = 293,  english = "Soul Jump"},
 }
 
 Important_Buffs = {
@@ -108,6 +114,10 @@ Important_Buffs = {
 }
 
 Damage_Ability_List = {
+    [26]  = {id = 26,  en = "Eagle Eye Shot"},
+    [28]  = {id = 28,  en = "Mijin Gakure"},
+    [45]  = {id = 45,  en = "Mug"},
+    [46]  = {id = 46,  en = "Shield Bash"},
     [66]  = {id = 66,  en = "Jump"},
     [67]  = {id = 67,  en = "High Jump"},
     [77]  = {id = 77,  en = "Weapon Bash"},
@@ -122,20 +132,8 @@ Damage_Ability_List = {
     [132] = {id = 132, en = "Dark Shot"},
     [260] = {id = 260, en = "Spirit Jump"},
     [293] = {id = 293, en = "Soul Jump"},
-    [544] = {id = 544, en = "Punch"},
-    [547] = {id = 547, en = "Double Punch"},
-    [550] = {id = 550, en = "Flaming Crush"},
-    [551] = {id = 551, en = "Meteor Strike"},
-    [552] = {id = 552, en = "Inferno"},
-    [598] = {id = 598, en = "Predator Claws"},
-    [613] = {id = 613, en = "Blizzard IV"},
-    [630] = {id = 630, en = "Chaotic Strike"},
-    [632] = {id = 632, en = "Judgment Bolt"},
-    [634] = {id = 634, en = "Volt Strike"},
-    [665] = {id = 665, en = "Night Terror"},
-    [960] = {id = 960, en = "Clarsach Call"},
-    [967] = {id = 967, en = "Sonic Buffet"},
-    [970] = {id = 970, en = "Hysteric Assault"}
+    [344] = {id = 344, en = "Swipe"},
+    [368] = {id = 368, en = "Lunge"},
 }
 
 Healing_Spell_List = {
@@ -151,6 +149,7 @@ Healing_Spell_List = {
     [10]  = {id = 10,  en = "Curaga IV"},
     [11]  = {id = 11,  en = "Curaga V"},
     [593] = {id = 593, en = "Magic Fruit"},
+    [581] = {id = 581, en = "Healing Breeze"},
 }
 
 Enspell_Elements = {
@@ -300,7 +299,7 @@ Damage_Spell_List = {
     [838] = {id = 838, en = "Watera"},
     [839] = {id = 839, en = "Watera II"},
     [870] = {id = 870, en = "Watera III"},
-     
+
     -- Helix
     [278] = {id = 278, en = "Geohelix"},
     [279] = {id = 279, en = "Hydrohelix"},

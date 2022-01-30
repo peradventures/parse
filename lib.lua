@@ -26,6 +26,7 @@ function Get_Entity_Data(entity_id)
     entity_data['is_alliance'] = entity.in_alliance
     entity_data['mob_type']    = entity.entity_type
     entity_data['spawn_type']  = entity.spawn_type
+    entity_data['pet_index']   = entity.pet_index
 
     return entity_data
 end
@@ -46,6 +47,26 @@ function Is_Me(string)
     if (player.name == string) then match = true end
 
     return match
+end
+
+--[[
+    DESCRIPTION: Check to see if the pet belongs to anyone in the party.
+    PARAMETERS :
+]]
+function Pet_Owner(act)
+    -- Influenced by flippant parse
+    local pet_data = windower.ffxi.get_mob_by_id(act.actor_id)
+
+    local owner
+    for _, member in pairs(windower.ffxi.get_party()) do
+        if type(member) == 'table' and member.mob then
+            if (member.mob.pet_index == pet_data.index) then
+                owner = member.mob
+            end
+        end
+    end
+
+    return owner
 end
 
 --[[
