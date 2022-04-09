@@ -55,6 +55,7 @@ Mob_Filter = nil
 -- Performance
 Window_Refresh_Throttling = 10
 Window_Refresh_Count = 0
+Debug = false
 
 --[[
     DESCRIPTION:    The pre-render function will trigger every time the client does a frame refresh.
@@ -121,6 +122,7 @@ windower.register_event('action message',
 function (actor_id, target_id, actor_index, target_index, message_id, param_1, param_2, param_3)
 
     local target = Get_Entity_Data(target_id)
+    if (not target) then return end
 
     -- Effect wears off
     if (message_id == 206) then

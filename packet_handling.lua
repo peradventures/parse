@@ -99,6 +99,8 @@ function Finish_WS(act, actor, log_offense)
     }
 
     Update_Data('inc', 1, audits, 'ws', 'count')
+    Update_Data_Single('inc', 1, audits, 'ws', ws_name, 'hits')
+
     if (damage > 0) then
         Update_Data('inc', 1, audits, 'ws', 'hits')
         Update_Data_Single('inc', 1, audits, 'ws', ws_name, 'hits')
@@ -130,6 +132,8 @@ function Finish_Spell_Casting(act, actor, log_offense)
 
     local spell_id = act.param
     local spell = Res.spells[spell_id]
+    if (not spell) then return end
+
     local damage = 0
 
     for target_index, target_value in pairs(act.targets) do
@@ -139,15 +143,21 @@ function Finish_Spell_Casting(act, actor, log_offense)
             target = Get_Entity_Data(act.targets[target_index].id)
             if (not target) then return end
 
-            -- Only log damage for party members whether they are NPC or not
-            if (log_offense) then
-                new_damage = Handle_Spell(act, result, actor.name, target.name)
-                if (not new_damage) then new_damage = 0 end
-                damage = damage +  new_damage
-            end
+            new_damage = Handle_Spell(act, result, actor.name, target.name)
+            if (not new_damage) then new_damage = 0 end
+
+            damage = damage + new_damage
 
         end
     end
+
+    local audits = {
+        player_name = actor.name,
+        target_name = target.name,
+    }
+
+    -- Log the use of the ability
+    Update_Data_Single('inc', 1, audits, 'magic', spell.en, 'count')
 
     if (Damage_Spell_List[spell_id]) and (not actor.is_npc) then
         Add_Message_To_Battle_Log(actor.name, spell.name, damage, nil, nil, 'spell', spell)
@@ -179,7 +189,6 @@ function Job_Ability(act, actor, log_offense)
         end
     end
 
-    -- Increment the count here to avoid counting for multiple targets.
     local audits = {
         player_name = actor.name,
         target_name = target.name,
@@ -281,12 +290,12 @@ function Pet_Ability(act, actor, log_offense)
 
     if (damage > 0) then
         Update_Data('inc', 1, audits, 'ability', 'hits')
+
+        if (Log_Pet) then
+            Add_Message_To_Battle_Log(actor.name, ability_name, damage)
+        end
     end
 
-    -- Battle log message gets handled in Handle_Ability if the damage is >0
-    if (Log_Pet) and (damage <= 0) then
-        Add_Message_To_Battle_Log(actor.name, ability_name, damage)
-    end
 end
 
 --[[

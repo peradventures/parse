@@ -1,4 +1,4 @@
-Horse_Race_Window, Horse_Race_Content = Create_Window(1025, 850, 10, nil, 0)
+Horse_Race_Window, Horse_Race_Content = Create_Window(600, 150, 10, nil, 0)
 Texts.stroke_width(Horse_Race_Window, 2)
 Texts.stroke_color(Horse_Race_Window, 28, 28, 28)
 Texts.bold(Horse_Race_Window, true)
@@ -68,6 +68,11 @@ function Horse_Race_Header()
     table.insert(Horse_Race_Data, ' Mob Filter: '..filter)
 
     local header = ''
+
+    if (Debug) then
+        header = header..Col_Header_Basic('PT Dmg')
+    end
+
     header = header..Col_Header_Rank(name_col)
     header = header..Col_Header_Basic('%T', true)
     header = header..Col_Header_Basic('Total')
@@ -111,6 +116,11 @@ function Horse_Race_Rows(rank, player_name)
     local melee_attempts = Get_Data(player_name, 'melee', 'count')
 
     local row = ''
+
+    if (Debug) then
+        row = row..Col_Debug()
+    end
+
     row = row..Col_Rank(rank, player_name, name_col)
     row = row..Col_Grand_Total(player_name, true)
     row = row..Col_Grand_Total(player_name)

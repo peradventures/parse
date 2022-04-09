@@ -36,6 +36,7 @@ function Focus_Player()
     Focus_Magic(player_name)
     Focus_Ability(player_name)
     Focus_Healing(player_name)
+    Focus_Pet(player_name)
 
     table.insert(Focus_Layout, ' ')
 
@@ -243,6 +244,40 @@ function Focus_Healing(player_name)
 end
 
 --[[
+    DESCRIPTION:
+    PARAMETERS :
+]]
+function Focus_Pet(player_name)
+    local pet_total = Get_Data(player_name, 'pet', 'total')
+
+    if (pet_total > 0) then
+
+        -- Header
+        local pet_header = Col_Header_Basic('Pet T')       ..' '..
+                           Col_Header_Basic('% Dmg', true) ..' '..
+                           Col_Header_Basic('Pet M')       ..' '..
+                           Col_Header_Basic('Pet R')       ..' '..
+                           Col_Header_Basic('Pet WS')      ..' '..
+                           Col_Header_Basic('Pet A')
+        table.insert(Focus_Layout, pet_header)
+
+        -- Construct string
+        local pet_data = Col_Damage(player_name, 'pet')        ..' '..
+                         Col_Damage(player_name, 'pet', true)  ..' '..
+                         Col_Damage(player_name, 'pet_melee')  ..' '..
+                         Col_Damage(player_name, 'pet_ranged') ..' '..
+                         Col_Damage(player_name, 'pet_ws')     ..' '..
+                         Col_Damage(player_name, 'pet_ability')
+
+        -- Output
+        table.insert(Focus_Layout, pet_data)
+        table.insert(Focus_Layout, '')
+
+    end
+
+end
+
+--[[
     DESCRIPTION:Builds the focus window.
 ]]
 function Single_Data(player_name)
@@ -250,7 +285,6 @@ function Single_Data(player_name)
 
     local header
     local name_col   = Column_Widths['name']
-    local dmg_col    = Column_Widths['dmg']
     local single_col = Column_Widths['single']
     local small_col  = Column_Widths['small']
 

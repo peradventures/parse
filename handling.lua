@@ -50,6 +50,10 @@ function Melee_Damage(result, player_name, target_name, owner_mob)
     Update_Data('inc', damage, audits, discrete_melee_type, 'total')
     Update_Data('inc',      1, audits, discrete_melee_type, 'count')
 
+    if (owner_mob) then
+        Update_Data('inc', damage, audits, 'pet', 'total')
+    end
+
     -- MELEE ------------------------------------------------------------------
     if (animation_id >= 0) and (animation_id < 4) then
         Update_Data('inc', damage, audits, broad_melee_type, 'total')
@@ -198,16 +202,21 @@ function Handle_Ranged(result, player_name, target_name, owner_mob)
     Update_Data('inc', damage, audits, 'total_no_sc', 'total')
     Update_Data('inc',      1, audits, ranged_type, 'count')
 
+    if (owner_mob) then
+        Update_Data('inc', damage, audits, 'pet', 'total')
+    end
+
     -- Miss /////////////////////////////////////////////////////////
     if (message_id == 354) then 
     	Update_Data('inc',      1, audits, ranged_type, 'misses')
-    	return
+        Running_Accuracy(player_name, false)
+    	return damage
 
     -- Shadows //////////////////////////////////////////////////////
     elseif (message_id == 31) then
         Update_Data('inc',      1, audits, ranged_type, 'hits')
         Update_Data('inc',      1, audits, ranged_type, 'shadows')
-        return
+        return damage
 
     -- Puppet ///////////////////////////////////////////////////////
     elseif (message_id == 185) then
@@ -278,6 +287,15 @@ function Weaponskill_Damage(result, player_name, target_name, ws_name, owner_mob
         ws_type = 'ws'
     end
 
+    local audits = {
+        player_name = player_name,
+        target_name = target_name,
+    }
+
+    if (owner_mob) then
+        Update_Data('inc', damage, audits, 'pet', 'total')
+    end
+
     Single_Damage(player_name, target_name, ws_type, damage, ws_name)
 
     return damage
@@ -312,12 +330,12 @@ function Handle_Spell(act, result, player_name, target_name)
 
     if (not spell) then
         Add_Message_To_Chat('W', 'Handle_Spell^handling', 'Couldn\'t find spell ID '..tostring(spell_id)..' in spells for '..player_name)
-        return
+        return 0
     end
 
     local spell_name = spell.en
     local damage = result.param
-    local spell_mapped
+    local spell_mapped = false
 
     if (Damage_Spell_List[spell_id]) then
         Single_Damage(player_name, target_name, 'magic', damage, spell_name)
@@ -366,6 +384,14 @@ function Handle_Ability(act, result, actor, target_name, owner_mob)
         ability_type = 'ability'
     end
 
+    local audits = {
+        player_name = player_name,
+        target_name = target_name,
+    }
+
+    if (owner_mob) then
+        Update_Data('inc', damage, audits, 'pet', 'total')
+    end
 
     if (Damage_Ability_List[ability_id]) or (ability.type == 'BloodPactRage') then
 

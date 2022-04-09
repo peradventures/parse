@@ -409,3 +409,15 @@ function Col_Color(condition, true_color, false_color)
     end
 
 end
+
+--[[
+    DESCRIPTION:
+    PARAMETERS :
+]]
+function Col_Debug(debug_type)
+
+    local party = windower.ffxi.get_party()
+    if (not party) then return 'ERROR' end
+    return Format_Number(Total_Party_Damage(party), Column_Widths['dmg'])
+
+end

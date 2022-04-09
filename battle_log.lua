@@ -1,4 +1,4 @@
-Blog_Window,  Blog_Content  = Create_Window(30, 410, 10, nil, 0)
+Blog_Window,  Blog_Content  = Create_Window(360, 350, 10, nil, 0)
 Texts.stroke_width(Blog_Window, 2)
 Texts.stroke_color(Blog_Window, 28, 28, 28)
 Texts.bold(Blog_Window, true)

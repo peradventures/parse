@@ -76,7 +76,7 @@ function Init_Data(index, player_name)
 	for _, skill in pairs(Skill_List) do
 		Parse_Data[index][skill] = {}
 		Parse_Data[index][skill]['single'] = {}
-		
+
 		for _, metric in pairs(Metric_List) do
 			Set_Data(0, index, skill, metric)
 		end
@@ -94,6 +94,8 @@ end
     PARAMETERS :    
 ]] 
 function Init_Data_Single(index, player_name, skill, action_name)
+	if (not index) or (not player_name) or (not skill) or (not action_name) then return end
+
 	Init_Data(index, player_name)
 
 	-- Don't want to overwrite action_name node if it is already built out
@@ -175,6 +177,7 @@ function Update_Data_Single(mode, value, audits, skill, action_name, metric)
 	end
 
 	-- This is used for the focus window
+	if (not skill) or (not player_name) or (not action_name) then return end
 	Skill_Data[skill][player_name][action_name] = true
 end
 
@@ -183,6 +186,7 @@ end
     PARAMETERS :
 ]]
 function Set_Data(value, index, skill, metric)
+	if (not value) or (not index) or (not skill) or (not metric) then return end
 	Parse_Data[index][skill][metric] = value
 end
 
@@ -191,6 +195,7 @@ end
     PARAMETERS :
 ]]
 function Set_Data_Single(value, index, skill, action_name, metric)
+	if (not value) or (not index) or (not skill) or (not action_name) or (not metric) then return end
 	Parse_Data[index][skill]['single'][action_name][metric] = value
 end
 
@@ -199,7 +204,7 @@ end
     PARAMETERS :
 ]]
 function Inc_Data(value, index, skill, metric)
-	if (not index) or (not skill) or (not metric) then return end
+	if (not value) or (not index) or (not skill) or (not metric) then return end
 	Parse_Data[index][skill][metric] = Parse_Data[index][skill][metric] + value
 end
 
@@ -208,6 +213,7 @@ end
     PARAMETERS :
 ]]
 function Inc_Data_Single(value, index, skill, action_name, metric)
+	if (not value) or (not index) or (not skill) or (not action_name) or (not metric) then return end
 	Parse_Data[index][skill]['single'][action_name][metric] = Parse_Data[index][skill]['single'][action_name][metric] + value
 end
 
@@ -238,6 +244,7 @@ function Get_Data(player_name, skill, metric)
 				total = total + Parse_Data[index][skill][metric]
 			end
 		end
+
 	end
 
 	return total
@@ -404,7 +411,7 @@ function Running_Accuracy(player_name, hit)
 
 	local max = Count_Table_Elements(Running_Accuracy_Data[player_name])
     if (max >= Running_Accuracy_Limit) then table.remove(Running_Accuracy_Data[player_name], Running_Accuracy_Limit) end
-    
+
 	table.insert(Running_Accuracy_Data[player_name], 1, hit)
 end
 
@@ -427,7 +434,9 @@ function Tally_Running_Accuracy(player_name, length)
 	local percent = (hits / count) * 100
 
 	local color = C_White
-	if (percent < 60) then
+	if (percent == 0) then
+		color = C_Gray
+	elseif (percent < 60) then
 		color = C_Red
 	elseif (percent < 80) then
 		color = C_Orange
