@@ -34,28 +34,30 @@ Packets = require('packets')
 -- Debugging
 LUA_Name = 'PARSE'
 
-require('window')
+require('data.settings')
+
 require('magic_numbers')
 require('debug_tools')
 require('string_lib')
 require('lib')
+require('csv_log')
 require('metrics')
 require('party')
-require('battle_log')
 require('handling')
-require('focus_window')
-require('columns')
-require('horse_race_window')
 require('packet_handling')
 require('commands')
 
+-- Windows
+require('windows._class_screen_item')
+require('window')
+require('windows.columns')
+require('windows.battle_log')
+require('windows.horse_race_window')
+require('windows.focus_window')
+require('windows.window_toggles')
+
 -- Monster specific damage filter
 Mob_Filter = nil
-
--- Performance
-Window_Refresh_Throttling = 10
-Window_Refresh_Count = 0
-Debug = false
 
 --[[
     DESCRIPTION:    The pre-render function will trigger every time the client does a frame refresh.
@@ -63,7 +65,8 @@ Debug = false
 ]]
 windower.register_event('prerender',
 function()
-    Window_Refresh_Count = (Window_Refresh_Count + 1) % Window_Refresh_Throttling
+    if (Log_CSV) and (Log_Ticks) then CSV_Tick() end
+    Window_Refresh_Count = (Window_Refresh_Count + 1) % Settings.Performance.Throttling
 
     if (Window_Refresh_Count > 0) then return end
 
@@ -71,6 +74,8 @@ function()
     Refresh_Blog()
     Refresh_Focus_Window()
 end)
+
+-- Record all offensive actions from players or pets in party or alliance
 
 --[[
     DESCRIPTION:    Handle the action packet. 
@@ -81,33 +86,24 @@ windower.register_event('action',
 function(act)
     if (not act) then return end
 
-    -- This is the entity that is performing the action. It could be a player, mob, or NPC.
-    local actor = Get_Entity_Data(act.actor_id)
-    if (not actor) then return end
+    local actor_mob = windower.ffxi.get_mob_by_id(act.actor_id)
+    if (not actor_mob) then return end
 
-    -- Check if the actor is a pet
     local owner_mob = Pet_Owner(act)
+    local log_offense = owner_mob or actor_mob.in_party or actor_mob.in_alliance
 
-    -- Record all offensive actions from players or pets in party or alliance
-    local log_offense = false
-    if (owner_mob) then
-        log_offense = (owner_mob.in_party or owner_mob.in_alliance)
-    else
-        log_offense = (actor.is_party or actor.is_alliance)
-    end
-
-    if     (act.category ==  1) then Melee_Attack(act, actor, log_offense)
-    elseif (act.category ==  2) then Ranged_Attack(act, actor, log_offense)
-    elseif (act.category ==  3) then Finish_WS(act, actor, log_offense)
-    elseif (act.category ==  4) then Finish_Spell_Casting(act, actor, log_offense)
+    if     (act.category ==  1) then Melee_Attack(act, actor_mob, log_offense)
+    elseif (act.category ==  2) then Ranged_Attack(act, actor_mob, log_offense)
+    elseif (act.category ==  3) then Finish_WS(act, actor_mob, log_offense)
+    elseif (act.category ==  4) then Finish_Spell_Casting(act, actor_mob, log_offense)
     elseif (act.category ==  5) then -- Do nothing (Finish Item Use)
-    elseif (act.category ==  6) then Job_Ability(act, actor, log_offense)
+    elseif (act.category ==  6) then Job_Ability(act, actor_mob, log_offense)
     elseif (act.category ==  7) then -- Do nothing (Begin WS)
     elseif (act.category ==  8) then -- Do nothing (Begin Spellcasting)
     elseif (act.category ==  9) then -- Do nothing (Begin or Interrupt Item Usage)
-    elseif (act.category == 11) then Finish_Monster_TP_Move(act, actor, log_offense)
+    elseif (act.category == 11) then Finish_Monster_TP_Move(act, actor_mob, log_offense)
     elseif (act.category == 12) then -- Do nothing (Begin Ranged Attack)
-    elseif (act.category == 13) then Pet_Ability(act, actor, log_offense)
+    elseif (act.category == 13) then Pet_Ability(act, actor_mob, log_offense)
     elseif (act.category == 14) then -- Do nothing (Unblinkable Job Ability)
     else
         Add_Message_To_Chat('W', ' Action Event^parse', 'Uncaptured_Category: '..act.category)
@@ -121,12 +117,12 @@ end)
 windower.register_event('action message',
 function (actor_id, target_id, actor_index, target_index, message_id, param_1, param_2, param_3)
 
-    local target = Get_Entity_Data(target_id)
+    local target = windower.ffxi.get_mob_by_id(target_id)
     if (not target) then return end
 
     -- Effect wears off
     if (message_id == 206) then
-        if (target.is_party or target.is_alliance) then
+        if (target.in_party or target.in_alliance) then
             if Important_Buffs[param_1] then
                 --add_message(target.name, '-'..important_buffs[param_1].name, ' ', c_orange)
             end

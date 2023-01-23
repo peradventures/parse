@@ -163,6 +163,20 @@ Enspell_Elements = {
 
 Damage_Spell_List = {
 
+    -- Light Elemental Magic
+    [21]  = {id = 21,  en = "Holy"},
+    [22]  = {id = 22,  en = "Holy II"},
+    [28]  = {id = 28,  en = "Banish"},
+    [29]  = {id = 29,  en = "Banish II"},
+    [30]  = {id = 30,  en = "Banish III"},
+    [31]  = {id = 31,  en = "Banish IV"},
+    [32]  = {id = 32,  en = "Banish V"},
+    [38]  = {id = 38,  en = "Banishga"},
+    [39]  = {id = 39,  en = "Banishga II"},
+    [40]  = {id = 40,  en = "Banishga III"},
+    [41]  = {id = 41,  en = "Banishga IV"},
+    [42]  = {id = 42,  en = "Banishga V"},
+
     -- Fire Elemental Magic
     [144] = {id = 144, en = "Fire"},
     [145] = {id = 145, en = "Fire II"},

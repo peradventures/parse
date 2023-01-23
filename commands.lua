@@ -14,16 +14,6 @@ function Toggle_Window(args)
         Refresh_Blog()
         Add_Message_To_Chat('A', 'Toggle_Window^commands', 'Battle Log visibility is now: ' ..tostring(Show_Blog))
 
-    elseif (args[1]:lower() == 'horse') then
-        Show_Horse = not Show_Horse
-        Refresh_Horse_Race()
-        Add_Message_To_Chat('A', 'Toggle_Window^commands', 'Horse Race visibility is now: '..tostring(Show_Horse))
-
-    elseif (args[1]:lower() == 'focus') then
-        Show_Focus = not Show_Focus
-        Refresh_Focus_Window()
-        Add_Message_To_Chat('A', 'Toggle_Window^commands', 'Focus visibility is now: '..tostring(Show_Focus))
-
     elseif (args[1]:lower() == 'error') then
         Show_Error = not Show_Error
         Add_Message_To_Chat('A', 'Toggle_Window^commands', 'Show_Error is now '..tostring(Show_Error))
@@ -123,23 +113,23 @@ end
 function Focus_Target(args)
 
     if (args[1]:lower() == 'ws') then
-        Focused_Skill = 'ws'
+        Focused_Trackable = 'ws'
         Add_Message_To_Chat('A', 'Focus_Target^commands', 'Focus type set to: Weaponskill')
 
     elseif (args[1]:lower() == 'sc') then
-        Focused_Skill = 'sc'
+        Focused_Trackable = 'sc'
         Add_Message_To_Chat('A', 'Focus_Target^commands', 'Focus type set to: Skillchain')
 
     elseif (args[1]:lower() == 'ability') then
-        Focused_Skill = 'ability'
+        Focused_Trackable = 'ability'
         Add_Message_To_Chat('A', 'Focus_Target^commands', 'Focus type set to: Ability')
 
     elseif (args[1]:lower() == 'healing') then
-        Focused_Skill = 'healing'
+        Focused_Trackable = 'healing'
         Add_Message_To_Chat('A', 'Focus_Target^commands', 'Focus type set to: Healing')
 
     elseif (args[1]:lower() == 'magic') then
-        Focused_Skill = 'magic'
+        Focused_Trackable = 'magic'
         Add_Message_To_Chat('A', 'Focus_Target^commands', 'Focus type set to: Magic')
 
     -- Focus on a player

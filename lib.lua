@@ -49,17 +49,18 @@ function Is_Me(string)
     return match
 end
 
---[[
-    DESCRIPTION: Check to see if the pet belongs to anyone in the party.
-    PARAMETERS :
-]]
+------------------------------------------------------------------------------------------------------
+-- Check to see if the pet belongs to anyone in the party.
+------------------------------------------------------------------------------------------------------
+-- act :
+------------------------------------------------------------------------------------------------------
 function Pet_Owner(act)
     -- Influenced by flippant parse
     local pet_data = windower.ffxi.get_mob_by_id(act.actor_id)
 
     local owner
     for _, member in pairs(windower.ffxi.get_party()) do
-        if type(member) == 'table' and member.mob then
+        if (type(member) == 'table') and (member.mob) then
             if (member.mob.pet_index == pet_data.index) then
                 owner = member.mob
             end

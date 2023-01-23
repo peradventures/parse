@@ -1,42 +1,38 @@
--- ******************************************************************************************************
--- *
--- *                                            Melee Attacks
--- *
--- ******************************************************************************************************
-
---[[
-    DESCRIPTION:    Set a node to a particular value.
-    PARAMETERS :
-        result      Data for each action taken on a target.
-        actor       Primary node.
-    NOTES      :
-    	message 				https://github.com/Windower/Lua/wiki/Message-IDs
-    	has_add_effect			Boolean
-    	add_effect_animation	https://github.com/Windower/Lua/wiki/Additional-Effect-IDs
-    							Enspell element
-   		add_effect_message		229: comes up with Ygnas bonus attack
-   		add_effect_param		Enspell damage
-    	spike_effect_param		0: Consistently on MNK vs Apex bats
-    	spike_effect_effect	
-   		effect 					2: Killing blow
-   								4: Counter? (probably not)
-   		stagger 				Animation the target does when being hit
-   		reaction 				8: Hit; Consistently on MNK vs Apex bats
-   								9: Miss?; Very rarely on MNK vs Apex bats
-]] 
-function Melee_Damage(result, player_name, target_name, owner_mob)
-    local animation_id = result.animation
-    local damage = result.param
+------------------------------------------------------------------------------------------------------
+-- Set data for a melee action.
+-- NOTES:
+-- message 				https://github.com/Windower/Lua/wiki/Message-IDs
+-- has_add_effect		boolean
+-- add_effect_animation	https://github.com/Windower/Lua/wiki/Additional-Effect-IDs
+-- Enspell element
+-- add_effect_message	229: comes up with Ygnas bonus attack
+-- add_effect_param		enspell damage
+-- spike_effect_param	0: consistently on MNK vs Apex bats
+-- spike_effect_effect	
+-- effect 				2: killing blow
+-- 						4: counter? (probably not)
+-- stagger 				animation the target does when being hit
+-- reaction 			8: hit; consistently on MNK vs Apex bats
+-- 						9: miss?; very rarely on MNK vs Apex bats
+------------------------------------------------------------------------------------------------------
+-- metadata    : contains all the information for the action
+-- player_name : name of the player that did the action
+-- target_name : name of the target that received the action
+-- owner_mob   : if the action was from a pet then this will hold the owner's mob
+------------------------------------------------------------------------------------------------------
+function Melee_Damage(metadata, player_name, target_name, owner_mob)
+    local animation_id = metadata.animation
+    local damage = metadata.param
     local throwing = false
 
     -- Need special handling for pets
     local broad_melee_type, discrete_melee_type
     if (owner_mob) then
-        broad_melee_type    = 'pet_melee'
+        broad_melee_type = 'pet_melee'
         discrete_melee_type = 'pet_melee_discrete'
         player_name = owner_mob.name
     else
-        broad_melee_type    = 'melee'
+        broad_melee_type = 'melee'
         discrete_melee_type = Get_Discrete_Melee_Type(animation_id)
     end
 
@@ -45,6 +41,7 @@ function Melee_Damage(result, player_name, target_name, owner_mob)
         target_name = target_name,
     }
 
+    -- Totals ///////////////////////////////////////////////////////
     Update_Data('inc', damage, audits, 'total', 'total')
     Update_Data('inc', damage, audits, 'total_no_sc', 'total')
     Update_Data('inc', damage, audits, discrete_melee_type, 'total')
@@ -54,47 +51,44 @@ function Melee_Damage(result, player_name, target_name, owner_mob)
         Update_Data('inc', damage, audits, 'pet', 'total')
     end
 
-    -- MELEE ------------------------------------------------------------------
+    -- Melee ////////////////////////////////////////////////////////
     if (animation_id >= 0) and (animation_id < 4) then
         Update_Data('inc', damage, audits, broad_melee_type, 'total')
         Update_Data('inc',      1, audits, broad_melee_type, 'count')
 
-    -- THROWING ---------------------------------------------------------------
+    -- Throwing /////////////////////////////////////////////////////
     elseif (animation_id == 4) then
         throwing = true
         Update_Data('inc', damage, audits, 'ranged', 'total')
         Update_Data('inc',      1, audits, 'ranged', 'count')
 
-    -- UNHANDLED ANIMATION ----------------------------------------------------
+    -- Unhandled Animation //////////////////////////////////////////
     else
         Add_Message_To_Chat('W', 'Melee_Damage^handling', 'Unhandled animation: '..tostring(animation_id))
     end
 
-    -- MIN/MAX ----------------------------------------------------------------
-    if throwing then
-        if (damage < Get_Data(player_name, 'ranged', 'min')) then Update_Data('set', damage, audits, 'ranged', 'min') end
+    -- Min/Max //////////////////////////////////////////////////////
+    if (throwing) then
+        if (damage > 0) and (damage < Get_Data(player_name, 'ranged', 'min')) then Update_Data('set', damage, audits, 'ranged', 'min') end
         if (damage > Get_Data(player_name, 'ranged', 'max')) then Update_Data('set', damage, audits, 'ranged', 'max') end
     else
-        if (damage < Get_Data(player_name, broad_melee_type, 'min')) then Update_Data('set', damage, audits, broad_melee_type, 'min') end
+        if (damage > 0) and (damage < Get_Data(player_name, broad_melee_type, 'min')) then Update_Data('set', damage, audits, broad_melee_type, 'min') end
         if (damage > Get_Data(player_name, broad_melee_type, 'max')) then Update_Data('set', damage, audits, broad_melee_type, 'max') end
     end
 
-    -- ENSPELL ----------------------------------------------------------------
-    local enspell_damage = result.add_effect_param
-
+    -- Enspell //////////////////////////////////////////////////////
+    local enspell_damage = metadata.add_effect_param
     if (enspell_damage > 0) then
-
         -- Element of the enspell is in add_effect_animation
         Update_Data('inc', enspell_damage, audits, 'magic',   'total')
         Update_Data('inc', enspell_damage, audits, 'enspell', 'total')
         Update_Data('inc',              1, audits, 'magic', 'count')
         if (enspell_damage < Get_Data(player_name, 'magic', 'min')) then Update_Data('set', enspell_damage, audits, 'magic', 'min') end
         if (enspell_damage > Get_Data(player_name, 'magic', 'max')) then Update_Data('set', enspell_damage, audits, 'magic', 'max') end
-
     end
 
-    -- NUANCE -----------------------------------------------------------------
-    local message_id = result.message
+    -- Metadata /////////////////////////////////////////////////////
+    local message_id = metadata.message
 
     -- Hit
     if (message_id == 1) then
@@ -161,28 +155,22 @@ function Melee_Damage(result, player_name, target_name, owner_mob)
     else
         Add_Message_To_Battle_Log(player_name, 'Att. nuance '..message_id) end
 
-    -----------------------------------------------------------------------
-
-    local spikes = result.spike_effect_effect
+    local spikes = metadata.spike_effect_effect
 
     return damage
 end
 
--- ******************************************************************************************************
--- *
--- *                                           Ranged Attacks
--- *
--- ******************************************************************************************************
-
---[[
-    DESCRIPTION:    Set a node to a particular value.
-    PARAMETERS :    
-        result      Data for each action taken on a target.
-        actor       Primary node.
-]]
-function Handle_Ranged(result, player_name, target_name, owner_mob)
-    local damage = result.param
-    local message_id = result.message
+------------------------------------------------------------------------------------------------------
+-- Set data for a ranged attack action.
+------------------------------------------------------------------------------------------------------
+-- metadata    : contains all the information for the action
+-- player_name : name of the player that did the action
+-- target_name : name of the target that received the action
+-- owner_mob   : if the action was from a pet then this will hold the owner's mob
+------------------------------------------------------------------------------------------------------
+function Handle_Ranged(metadata, player_name, target_name, owner_mob)
+    local damage = metadata.param
+    local message_id = metadata.message
 
     -- Need special handling for pets
     local ranged_type
@@ -198,6 +186,7 @@ function Handle_Ranged(result, player_name, target_name, owner_mob)
         target_name = target_name,
     }
 
+    -- Totals ///////////////////////////////////////////////////////
     Update_Data('inc', damage, audits, 'total',  'total')
     Update_Data('inc', damage, audits, 'total_no_sc', 'total')
     Update_Data('inc',      1, audits, ranged_type, 'count')
@@ -257,34 +246,28 @@ function Handle_Ranged(result, player_name, target_name, owner_mob)
         Add_Message_To_Chat('W', 'Handle_Ranged^handling', 'Ranged damage was 0.')
     end
 
-    if (damage < Get_Data(player_name, ranged_type, 'min')) then Update_Data('set', damage, audits, ranged_type, 'min') end
+    if (damage > 0) and (damage < Get_Data(player_name, ranged_type, 'min')) then Update_Data('set', damage, audits, ranged_type, 'min') end
     if (damage > Get_Data(player_name, ranged_type, 'max')) then Update_Data('set', damage, audits, ranged_type, 'max') end
 
     return damage
 end
 
--- ******************************************************************************************************
--- *
--- *                                     Weaponskills and Skillchains
--- *
--- ******************************************************************************************************
+------------------------------------------------------------------------------------------------------
+-- Set data for a weaponskill action.
+------------------------------------------------------------------------------------------------------
+-- metadata    : contains all the information for the action
+-- player_name : name of the player that did the action
+-- target_name : name of the target that received the action
+-- ws_name     : name of the weaponskill
+-- owner_mob   : if the action was from a pet then this will hold the owner's mob
+------------------------------------------------------------------------------------------------------
+function Weaponskill_Damage(metadata, player_name, target_name, ws_name, owner_mob)
+    local damage = metadata.param
 
---[[
-    DESCRIPTION:    Handle weaponskill damage
-    PARAMETERS :    
-        result      Data for each action taken on a target
-        actor_name  Primary node
-        ws_name		Name of the weaponskill
-]] 
-function Weaponskill_Damage(result, player_name, target_name, ws_name, owner_mob)
-    local damage = result.param
-
-    local ws_type
+    local ws_type = 'ws'
     if (owner_mob) then
         player_name = owner_mob.name
         ws_type = 'pet_ws'
-    else
-        ws_type = 'ws'
     end
 
     local audits = {
@@ -296,35 +279,35 @@ function Weaponskill_Damage(result, player_name, target_name, ws_name, owner_mob
         Update_Data('inc', damage, audits, 'pet', 'total')
     end
 
-    Single_Damage(player_name, target_name, ws_type, damage, ws_name)
+    Catalog_Damage(player_name, target_name, ws_type, damage, ws_name)
 
     return damage
 end
 
---[[
-    DESCRIPTION:    Handle skillchain damage
-    PARAMETERS :    
-        result      Data for each action taken on a target
-        actor_name  Primary node
-        sc_name		Name of the weaponskill
-]] 
-function Skillchain_Damage(result, player_name, target_name, sc_name)
-    local damage = result.add_effect_param
-    Single_Damage(player_name, target_name, 'sc', damage, sc_name)
+------------------------------------------------------------------------------------------------------
+-- Set data for a skillchain action.
+------------------------------------------------------------------------------------------------------
+-- metadata    : contains all the information for the action
+-- player_name : name of the player that did the action
+-- target_name : name of the target that received the action
+-- sc_name     : name of the skillchain
+------------------------------------------------------------------------------------------------------
+function Skillchain_Damage(metadata, player_name, target_name, sc_name)
+    local damage = metadata.add_effect_param
+    Catalog_Damage(player_name, target_name, 'sc', damage, sc_name)
     return damage
 end
 
--- ******************************************************************************************************
--- *
--- *                                                  Magic
--- *
--- ******************************************************************************************************
-
---[[
-    DESCRIPTION:    Handle spell damage (including healing)
-    PARAMETERS :
-]]
-function Handle_Spell(act, result, player_name, target_name)
+------------------------------------------------------------------------------------------------------
+-- Set data for a spell action (including healing).
+-- Not all spells do damage and not all spells heal this will sort those out.
+------------------------------------------------------------------------------------------------------
+-- act         : the main packet; need it to get spell ID
+-- metadata    : contains all the information for the action
+-- player_name : name of the player that did the action
+-- target_name : name of the target that received the action
+------------------------------------------------------------------------------------------------------
+function Handle_Spell(act, metadata, player_name, target_name)
     local spell_id = act.param
     local spell = Res.spells[spell_id]
 
@@ -334,17 +317,17 @@ function Handle_Spell(act, result, player_name, target_name)
     end
 
     local spell_name = spell.en
-    local damage = result.param
     local spell_mapped = false
+    local damage = metadata.param or 0
 
     if (Damage_Spell_List[spell_id]) then
-        Single_Damage(player_name, target_name, 'magic', damage, spell_name)
+        Catalog_Damage(player_name, target_name, 'magic', damage, spell_name)
         spell_mapped = true
     end
 
     -- TO DO: Handle Overcure
     if (Healing_Spell_List[spell_id]) then
-    	Single_Damage(player_name, target_name, 'healing', damage, spell_name)
+    	Catalog_Damage(player_name, target_name, 'healing', damage, spell_name)
         spell_mapped = true
     end
 
@@ -352,36 +335,29 @@ function Handle_Spell(act, result, player_name, target_name)
         --Add_Message_To_Chat('W', 'Handle_Spell^handling', tostring(spell_name)..' is not included in Damage_Spells global.')
     end
 
-    if (not damage) then damage = 0 end
-
     return damage
 end
 
--- ******************************************************************************************************
--- *
--- *                                               Abilities
--- *
--- ******************************************************************************************************
-
---[[
-    DESCRIPTION:    Handle ability damage. This includes pet damage (since they are ability based)
-    PARAMETERS :    
-        act 		Action data
-        result      Data for each action taken on a target
-        actor       Primary node
-]] 
-function Handle_Ability(act, result, actor, target_name, owner_mob)
-    local player_name = actor.name
+------------------------------------------------------------------------------------------------------
+-- Set data for an ability action.
+-- This includes pet damage (since they are ability based).
+------------------------------------------------------------------------------------------------------
+-- act         : the main packet; need it to get spell ID
+-- metadata    : contains all the information for the action
+-- actor_mob   : mob of the player that did the action
+-- target_name : name of the target that received the action
+-- owner_mob   : if the action was from a pet then this will hold the owner's mob
+------------------------------------------------------------------------------------------------------
+function Handle_Ability(act, metadata, actor_mob, target_name, owner_mob)
+    local player_name = actor_mob.name
     local ability_id = act.param
     local ability = Res.job_abilities[ability_id]
     local ability_name = Get_Ability_Name(act)
-    local damage = result.param
+    local damage = metadata.param
 
-    local ability_type
+    local ability_type = 'ability'
     if (owner_mob) then
         ability_type = 'pet_ability'
-    else
-        ability_type = 'ability'
     end
 
     local audits = {
@@ -394,15 +370,13 @@ function Handle_Ability(act, result, actor, target_name, owner_mob)
     end
 
     if (Damage_Ability_List[ability_id]) or (ability.type == 'BloodPactRage') then
-
         if (damage > 0) then
-            Single_Damage(player_name, target_name, ability_type, damage, ability_name)
+            Catalog_Damage(player_name, target_name, ability_type, damage, ability_name)
 
-            if (not actor.is_npc) then
+            if (not actor_mob.is_npc) then
                 Add_Message_To_Battle_Log(player_name, ability_name, damage, nil, nil, ability_type, ability)
             end
         end
-
     end
 
     return damage

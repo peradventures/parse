@@ -1,13 +1,20 @@
-Horse_Race_Window, Horse_Race_Content = Create_Window(600, 150, 10, nil, 0)
-Texts.stroke_width(Horse_Race_Window, 2)
-Texts.stroke_color(Horse_Race_Window, 28, 28, 28)
-Texts.bold(Horse_Race_Window, true)
+Horse_Race_Window = Window:New({
+    name       = 'Horse Race',
+    message    = 'Horse Race',
+    x_pos      = 600,
+    y_pos      = 120,
+    padding    = 1,
+    bg_alpha   = 225,
+    bg_red     = 0,
+    bg_green   = 0,
+    bg_blue    = 15,
+    bg_visible = true,
+})
 
 Top_Rank_Default = 6
 
 Compact_Mode           = true
 Total_Damage_Only      = false
-Show_Horse             = true
 Show_Crit              = false
 Show_Pet               = false
 Show_Percent           = false
@@ -20,16 +27,18 @@ Include_SC_Damage      = false
 Accuracy_Show_Attempts = false
 Top_Rank               = Top_Rank_Default
 
---[[
-    DESCRIPTION:    Refreshes the parser on the screen.
-]] 
+------------------------------------------------------------------------------------------------------
+-- Refreshes the parser on the screen.
+------------------------------------------------------------------------------------------------------
 function Refresh_Horse_Race()
     Horse_Race()
-    Horse_Race_Window:update(Horse_Race_Content)
+    Horse_Race_Window.Update()
 
-    local info = windower.ffxi.get_info()
-
-    if (Show_Horse) then Horse_Race_Window:show() else Horse_Race_Window:hide() end          
+    if (Settings.HorseRace.Show) then
+        Horse_Race_Window.Show()
+    else
+        Horse_Race_Window.Hide()
+    end
 end
 
 --[[
@@ -37,11 +46,7 @@ end
 ]] 
 function Horse_Race()
 
-    -- Populate Total_Damage_Race to put the highest damage on top
     Sort_Damage()
-
-    -- Iniitialize the horse race window. It will be blank until someone does damage
-    Horse_Race_Data = {}
     Horse_Race_Header()
 
     -- Populate the horse race window with data from the top [x] players
@@ -52,8 +57,6 @@ function Horse_Race()
     end
 
     Horse_Race_Help_Text()
-
-    Horse_Race_Content.token = Concat_Strings(Horse_Race_Data)
 end
 
 --[[
@@ -65,7 +68,7 @@ function Horse_Race_Header()
 
     local filter
     if (Mob_Filter) then filter = Mob_Filter else filter = 'All' end
-    table.insert(Horse_Race_Data, ' Mob Filter: '..filter)
+    Horse_Race_Window.Add_Line(' Mob Filter: '..filter)
 
     local header = ''
 
@@ -100,7 +103,7 @@ function Horse_Race_Header()
         if (Show_Deaths)  then header = header..Col_Header_Deaths(small_col) end
     end
 
-    table.insert(Horse_Race_Data, header)
+    Horse_Race_Window.Add_Line(header)
 end
 
 --[[
@@ -150,7 +153,7 @@ function Horse_Race_Rows(rank, player_name)
 
     row = row..C_White
 
-    table.insert(Horse_Race_Data, row)
+    Horse_Race_Window.Add_Line(row)
 end
 
 --[[
@@ -160,31 +163,31 @@ end
 function Horse_Race_Help_Text()
 
     if (Show_Help_Text) then
-        table.insert(Horse_Race_Data, '')
-        table.insert(Horse_Race_Data, 'CURRENT FILTERS AND SETTINGS')
+        Horse_Race_Window.Add_Line('')
+        Horse_Race_Window.Add_Line('CURRENT FILTERS AND SETTINGS')
 
         if (not Include_SC_Damage) then
-            table.insert(Horse_Race_Data, '-- NO Skillchain Damage.')
+            Horse_Race_Window.Add_Line('-- NO Skillchain Damage.')
         end
 
         if (not Show_Percent) then
-            table.insert(Horse_Race_Data, '-- NO Total Percent.')
+            Horse_Race_Window.Add_Line('-- NO Total Percent.')
         end
 
         if (not Show_Healing) then
-            table.insert(Horse_Race_Data, '-- NO Healing.')
+            Horse_Race_Window.Add_Line('-- NO Healing.')
         end
 
         if (not Show_Deaths) then
-            table.insert(Horse_Race_Data, '-- NO Deaths.')
+            Horse_Race_Window.Add_Line('-- NO Deaths.')
         end
 
         if (Combine_Crit) then
-            table.insert(Horse_Race_Data, '-- Melee and Ranged critical hits are combined.')
+            Horse_Race_Window.Add_Line('-- Melee and Ranged critical hits are combined.')
         end
 
         if (Show_Total_Acc) then
-            table.insert(Horse_Race_Data, '-- Showing total accuracy for whole duration.')
+            Horse_Race_Window.Add_Line('-- Showing total accuracy for whole duration.')
         end
     end
 

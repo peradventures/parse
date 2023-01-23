@@ -285,7 +285,7 @@ function Col_Single_Damage(player_name, action_name, metric, percent)
     if (metric == 'ignore') then
         single_damage = 0
     else
-        single_damage = Get_Data_Single(player_name, Focused_Skill, action_name, metric)
+        single_damage = Get_Data_Catalog(player_name, Focused_Trackable, action_name, metric)
     end
 
     local color = Col_Color((single_damage == 0), C_Gray)
@@ -313,7 +313,7 @@ end
 ]]
 function Col_Single_Attempts(player_name, action_name)
     local column_width = Column_Widths['single']
-    local single_attempts = Get_Data_Single(player_name, Focused_Skill, action_name, 'count')
+    local single_attempts = Get_Data_Catalog(player_name, Focused_Trackable, action_name, 'count')
     return Format_Number(single_attempts, column_width)
 end
 
@@ -323,10 +323,10 @@ end
 ]]
 function Col_Single_Accuracy(player_name, action_name)
     local column_width = Column_Widths['percent']
-    local single_hits  = Get_Data_Single(player_name, Focused_Skill, action_name, 'hits')
+    local single_hits  = Get_Data_Catalog(player_name, Focused_Trackable, action_name, 'hits')
     local color        = Col_Color((single_hits == 0), C_Gray)
 
-    local single_attempts = Get_Data_Single(player_name, Focused_Skill, action_name, 'count')
+    local single_attempts = Get_Data_Catalog(player_name, Focused_Trackable, action_name, 'count')
     return Format_Percent(single_hits, single_attempts, column_width, color)
 end
 
@@ -343,12 +343,12 @@ function Col_Single_Average_Damage(player_name, action_name)
         column_width = Column_Widths['dmg']
     end
 
-    local single_attempts = Get_Data_Single(player_name, Focused_Skill, action_name, 'count')
+    local single_attempts = Get_Data_Catalog(player_name, Focused_Trackable, action_name, 'count')
     if (single_attempts == 0) then
         return Format_Number(0, column_width, C_Gray)
     end
 
-    local single_damage  = Get_Data_Single(player_name, Focused_Skill, action_name, 'total')
+    local single_damage  = Get_Data_Catalog(player_name, Focused_Trackable, action_name, 'total')
     local color = Col_Color((single_damage == 0), C_Gray)
 
     local single_average = tonumber(string.format("%d", single_damage / single_attempts))

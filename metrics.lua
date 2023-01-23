@@ -1,4 +1,4 @@
-Skill_List = {
+Trackable_List = {
     'total',
     'total_no_sc',
     'melee',
@@ -37,11 +37,13 @@ Metric_List = {
     'max',
 }
 
+Catalog_Node = 'catalog'
+
 -- Holds all of the damage data that the parser uses
 Parse_Data = {} -- index is player:mob
 
 -- Keeps track of which skills have been initialized
-Skill_Data = {}	-- [skill][player_name]
+Trackable_Data = {}	-- [trackable][player_name]
 
 -- Keeps track of which players have been initialized
 Initialized_Players = {}
@@ -54,18 +56,16 @@ Running_Accuracy_Limit = 25
 Total_Damage_Race  = {}
 
 -- Ranks weaponskills, skillchains, abilities, etc
-Single_Damage_Race = {}
+Catalog_Damage_Race = {}
 
--- ******************************************************************************************************
--- *
--- *                                            Initialization
--- *
--- ******************************************************************************************************
-
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]] 
+------------------------------------------------------------------------------------------------------
+-- Initializes a player:mob combination in the primary data node.
+-- Also initializes separate tracking globals for Running Accuracy.
+-- If the player has already been initialized then this will quit out early.
+------------------------------------------------------------------------------------------------------
+-- index       : "player_name:mob_name"
+-- player_name : "player_name"
+------------------------------------------------------------------------------------------------------
 function Init_Data(index, player_name)
 	if (not index) then return end
 	if Parse_Data[index] then return end
@@ -73,12 +73,12 @@ function Init_Data(index, player_name)
 	Parse_Data[index] = {}
 
 	-- Initialize data nodes
-	for _, skill in pairs(Skill_List) do
-		Parse_Data[index][skill] = {}
-		Parse_Data[index][skill]['single'] = {}
+	for _, trackable in pairs(Trackable_List) do
+		Parse_Data[index][trackable] = {}
+		Parse_Data[index][trackable][Catalog_Node] = {}
 
 		for _, metric in pairs(Metric_List) do
-			Set_Data(0, index, skill, metric)
+			Set_Data(0, index, trackable, metric)
 		end
 	end
 
@@ -89,336 +89,354 @@ function Init_Data(index, player_name)
 	end
 end
 
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]] 
-function Init_Data_Single(index, player_name, skill, action_name)
-	if (not index) or (not player_name) or (not skill) or (not action_name) then return end
+------------------------------------------------------------------------------------------------------
+-- Initializes a cataloged action.
+-- If the action has already been initialized then this will quit out early.
+-- Also initializes Trackable_Data which is used in the Focus Window.
+------------------------------------------------------------------------------------------------------
+-- index       : "player_name:mob_name"
+-- player_name : "player_name"
+-- trackable   : a tracked item from the Trackable_List
+-- action_name : the name of the action to be cataloged
+------------------------------------------------------------------------------------------------------
+function Init_Data_Catalog(index, player_name, trackable, action_name)
+	if (not index) or (not player_name) or (not trackable) or (not action_name) then return end
 
 	Init_Data(index, player_name)
 
 	-- Don't want to overwrite action_name node if it is already built out
-	if (Parse_Data[index][skill]['single'][action_name]) then return end
+	if (Parse_Data[index][trackable][Catalog_Node][action_name]) then return end
 
-	Parse_Data[index][skill]['single'][action_name] = {}
+	Parse_Data[index][trackable][Catalog_Node][action_name] = {}
 
-	-- Initialize single data nodes
+	-- Initialize catalog data nodes
 	for _, metric in pairs(Metric_List) do
-		Set_Data_Single(0, index, skill, action_name, metric)
+		Set_Data_Catalog(0, index, trackable, action_name, metric)
 	end
 
 	-- Need to set minimum high manually to capture accurate minimums
-	Set_Data_Single(100000, index, skill, action_name, 'min')
+	Set_Data_Catalog(100000, index, trackable, action_name, 'min')
 
 	-- Initialize tracking tables
-	if (not Skill_Data[skill]) then Skill_Data[skill] = {} end
-	if (not Skill_Data[skill][player_name]) then Skill_Data[skill][player_name] = {} end
+	if (not Trackable_Data[trackable]) then Trackable_Data[trackable] = {} end
+	if (not Trackable_Data[trackable][player_name]) then Trackable_Data[trackable][player_name] = {} end
 end
 
--- ******************************************************************************************************
--- *
--- *                                                Sets
--- *
--- ******************************************************************************************************
-
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]] 
-function Update_Data(mode, value, audits, skill, metric)
-
+------------------------------------------------------------------------------------------------------
+-- A handler function that makes sure the data is set appropriately.
+-- This does not set data directly. Rather, it calls the Set~ or Inc~ functions.
+-- This is called by the functions that perform the action handling.
+------------------------------------------------------------------------------------------------------
+-- mode      : flag calling out whether the data should be set or incremented
+-- value     : the value to set or increment the node to/by
+-- audits    : a table containing necessary data; helps save on parameter slots
+-- trackable : a tracked item from the Trackable_List
+-- metric    : a trackable's metric from the Metric_List
+------------------------------------------------------------------------------------------------------
+function Update_Data(mode, value, audits, trackable, metric)
 	local player_name = audits.player_name
 	local target_name = audits.target_name
 	local index = Build_Index(player_name, target_name)
 
 	Init_Data(index, player_name)
 
-	-- Increment from existing value
 	if (mode == 'inc') then
-		Inc_Data(value, index, skill, metric)
-
-	-- Set value directly
+		Inc_Data(value, index, trackable, metric)
 	elseif (mode == 'set') then
-		Set_Data(value, index, skill, metric)
-
+		Set_Data(value, index, trackable, metric)
 	else
 		Add_Message_To_Chat('E', 'Update_Data^metrics', 'Invalid update mode: '..tostring(mode))
-
 	end
-
 end
 
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]] 
-function Update_Data_Single(mode, value, audits, skill, action_name, metric)
-
+------------------------------------------------------------------------------------------------------
+-- A handler function that makes sure the data is set appropriately (for cataloged actions)
+-- This does not set data directly. Rather, it calls the Set~ or Inc~ functions.
+-- This is called by the functions that perform the action handling.
+------------------------------------------------------------------------------------------------------
+-- mode        : flag calling out whether the data should be set or incremented
+-- value       : the value to set or increment the node to/by
+-- audits      : a table containing necessary data; helps save on parameter slots
+-- trackable   : a tracked item from the Trackable_List
+-- action_name : the name of the action to be cataloged
+-- metric      : a trackable's metric from the Metric_List
+------------------------------------------------------------------------------------------------------
+function Update_Data_Catalog(mode, value, audits, trackable, action_name, metric)
 	local player_name = audits.player_name
 	local target_name = audits.target_name
-
 	local index = Build_Index(player_name, target_name)
-	Init_Data_Single(index, player_name, skill, action_name)
 
-	-- This holds all of the players who have data.
+	if (not trackable) or (not player_name) or (not action_name) then return end
+	Init_Data_Catalog(index, player_name, trackable, action_name)
 	if (not Initialized_Players[player_name]) then Initialized_Players[player_name] = true end
 
-	-- Increment from existing value
 	if (mode == 'inc') then
-		Inc_Data_Single(value, index, skill, action_name, metric)
-
-	-- Set value directly
+		Inc_Data_Catalog(value, index, trackable, action_name, metric)
 	elseif (mode == 'set') then
-		Set_Data_Single(value, index, skill, action_name, metric)
-
+		Set_Data_Catalog(value, index, trackable, action_name, metric)
 	else
-		Add_Message_To_Chat('E', 'Update_Data_Single^metrics', 'Invalid update mode: '..tostring(mode))
+		Add_Message_To_Chat('E', 'Update_Data_Catalog^metrics', 'Invalid update mode: '..tostring(mode))
 	end
 
 	-- This is used for the focus window
-	if (not skill) or (not player_name) or (not action_name) then return end
-	Skill_Data[skill][player_name][action_name] = true
+	Trackable_Data[trackable][player_name][action_name] = true
 end
 
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Set_Data(value, index, skill, metric)
-	if (not value) or (not index) or (not skill) or (not metric) then return end
-	Parse_Data[index][skill][metric] = value
+------------------------------------------------------------------------------------------------------
+-- Directly sets a trackable's metric to a specified value.
+------------------------------------------------------------------------------------------------------
+-- value     : the value to set the node to
+-- index     : "player_name:mob_name"
+-- trackable : a tracked item from the Trackable_List
+-- metric    : a trackable's metric from the Metric_List
+------------------------------------------------------------------------------------------------------
+function Set_Data(value, index, trackable, metric)
+	if (not value) or (not index) or (not trackable) or (not metric) then return end
+	Parse_Data[index][trackable][metric] = value
 end
 
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Set_Data_Single(value, index, skill, action_name, metric)
-	if (not value) or (not index) or (not skill) or (not action_name) or (not metric) then return end
-	Parse_Data[index][skill]['single'][action_name][metric] = value
+------------------------------------------------------------------------------------------------------
+-- Directly sets a trackable's cataloged action metric to a specified value.
+-- Some trackables need to be cataloged discretely in addition to holistically.
+-- For example, metrics for weapons skill damage and metrics for each individual weapon skill.
+-- The discrete tracking happens in the "catalog" node under each trackable.
+------------------------------------------------------------------------------------------------------
+-- value       : the value to set the node to
+-- index       : "player_name:mob_name"
+-- trackable   : a tracked item from the Trackable_List
+-- action_name : the name of the action to be cataloged
+-- metric      : a trackable's metric from the Metric_List
+------------------------------------------------------------------------------------------------------
+function Set_Data_Catalog(value, index, trackable, action_name, metric)
+	if (not value) or (not index) or (not trackable) or (not action_name) or (not metric) then return end
+	Parse_Data[index][trackable][Catalog_Node][action_name][metric] = value
 end
 
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Inc_Data(value, index, skill, metric)
-	if (not value) or (not index) or (not skill) or (not metric) then return end
-	Parse_Data[index][skill][metric] = Parse_Data[index][skill][metric] + value
+------------------------------------------------------------------------------------------------------
+-- Increments a trackable's metric by a specified amount.
+------------------------------------------------------------------------------------------------------
+-- value     : the value to set the node to
+-- index     : "player_name:mob_name"
+-- trackable : a tracked item from the Trackable_List
+-- metric    : a trackable's metric from the Metric_List
+------------------------------------------------------------------------------------------------------
+function Inc_Data(value, index, trackable, metric)
+	if (not value) or (not index) or (not trackable) or (not metric) then return end
+	Parse_Data[index][trackable][metric] = Parse_Data[index][trackable][metric] + value
 end
 
---[[
-    DESCRIPTION:
-    PARAMETERS :
-]]
-function Inc_Data_Single(value, index, skill, action_name, metric)
-	if (not value) or (not index) or (not skill) or (not action_name) or (not metric) then return end
-	Parse_Data[index][skill]['single'][action_name][metric] = Parse_Data[index][skill]['single'][action_name][metric] + value
+------------------------------------------------------------------------------------------------------
+-- Increments a trackable's metric by a specified amount.
+-- Some trackables need to be cataloged discretely in addition to holistically.
+-- For example, metrics for weapons skill damage and metrics for each individual weapon skill.
+-- The discrete tracking happens in the "catalog" node under each trackable.
+------------------------------------------------------------------------------------------------------
+-- value       : the value to set the node to
+-- index       : "player_name:mob_name"
+-- trackable   : a tracked item from the Trackable_List
+-- action_name : the name of the action to be cataloged
+-- metric      : a trackable's metric from the Metric_List
+------------------------------------------------------------------------------------------------------
+function Inc_Data_Catalog(value, index, trackable, action_name, metric)
+	if (not value) or (not index) or (not trackable) or (not action_name) or (not metric) then return end
+	Parse_Data[index][trackable][Catalog_Node][action_name][metric] = Parse_Data[index][trackable][Catalog_Node][action_name][metric] + value
 end
 
--- ******************************************************************************************************
--- *
--- *                                                Gets
--- *
--- ******************************************************************************************************
-
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]] 
-function Get_Data(player_name, skill, metric)
+------------------------------------------------------------------------------------------------------
+-- Gets data from a trackable metric.
+-- If the mob filter is set then only actions towards that mob are counted.
+------------------------------------------------------------------------------------------------------
+-- player_name : string containing the player's name
+-- trackable   : a tracked item from the Trackable_List
+-- metric      : a trackable's metric from the Metric_List
+------------------------------------------------------------------------------------------------------
+function Get_Data(player_name, trackable, metric)
 	local total = 0
-
 	for index, _ in pairs(Parse_Data) do
-
-		-- If there is no mob filter then get everything associated with this player
 		if (not Mob_Filter) then
-			if string.find(index, player_name) then
-				total = total + Parse_Data[index][skill][metric]
+			if string.find(index, player_name..":") then
+				total = total + Parse_Data[index][trackable][metric]
 			end
-
-		-- Otherwise get everything for this specific mob. Partial matches count
 		else
 			if string.find(index, player_name..":"..Mob_Filter) then
-				total = total + Parse_Data[index][skill][metric]
+				total = total + Parse_Data[index][trackable][metric]
 			end
 		end
 
 	end
-
 	return total
 end
 
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]] 
-function Get_Data_Single(player_name, skill, action_name, metric)
-	local value = 0
-
-	for index, v in pairs(Parse_Data) do
-
-		-- If there is no mob filter then get everything associated with this player
+------------------------------------------------------------------------------------------------------
+-- Gets data from a trackable's cataloged metric.
+-- If the mob filter is set then only actions towards that mob are counted.
+------------------------------------------------------------------------------------------------------
+-- player_name : string containing the player's name
+-- trackable   : a tracked item from the Trackable_List
+-- action_name : the name of the action to be cataloged
+-- metric      : a trackable's metric from the Metric_List
+------------------------------------------------------------------------------------------------------
+function Get_Data_Catalog(player_name, trackable, action_name, metric)
+	local total = 0
+	for index, _ in pairs(Parse_Data) do
 		if (not Mob_Filter) then
 			if string.find(index, player_name) then 
-				value = Get_Data_Single_Calculation(value, index, skill, action_name, metric)
+				total = Get_Data_Catalog_Calculation(total, index, trackable, action_name, metric)
 			end
-
-		-- Otherwise get everything for this specific mob. Partial matches count
 		else
 			if string.find(index, player_name..":"..Mob_Filter) then
-				value = Get_Data_Single_Calculation(value, index, skill, action_name, metric)
+				total = Get_Data_Catalog_Calculation(total, index, trackable, action_name, metric)
 			end
 		end
-
 	end
+	return total
+end
 
+------------------------------------------------------------------------------------------------------
+-- Helper function for getting cataloged data.
+------------------------------------------------------------------------------------------------------
+-- value       : original value to be added on to
+-- index       : "player_name:mob_name"
+-- trackable   : a tracked item from the Trackable_List
+-- action_name : the name of the action to be cataloged
+-- metric      : a trackable's metric from the Metric_List
+------------------------------------------------------------------------------------------------------
+function Get_Data_Catalog_Calculation(value, index, trackable, action_name, metric)
+	if (Parse_Data[index][trackable][Catalog_Node][action_name]) then
+		if     (metric == 'min') then value = Get_Data_Catalog_Min_Calculation(value, index, trackable, action_name, metric)
+		elseif (metric == 'max') then value = Get_Data_Catalog_Max_Calculation(value, index, trackable, action_name, metric)
+		else value = value + Parse_Data[index][trackable][Catalog_Node][action_name][metric] end
+	end
 	return value
 end
 
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]] 
-function Get_Data_Single_Calculation(value, index, skill, action_name, metric)
-
-	if (Parse_Data[index][skill]['single'][action_name]) then
-		if     (metric == 'min') then value = Get_Data_Single_Min_Calculation(value, index, skill, action_name, metric)
-		elseif (metric == 'max') then value = Get_Data_Single_Max_Calculation(value, index, skill, action_name, metric)
-		else 					      value = value + Parse_Data[index][skill]['single'][action_name][metric] end
+------------------------------------------------------------------------------------------------------
+-- Helper function for getting cataloged data for minimum metric.
+------------------------------------------------------------------------------------------------------
+-- min         : current observed minimum value
+-- index       : "player_name:mob_name"
+-- trackable   : a tracked item from the Trackable_List
+-- action_name : the name of the action to be cataloged
+-- metric      : a trackable's metric from the Metric_List
+------------------------------------------------------------------------------------------------------
+function Get_Data_Catalog_Min_Calculation(min, index, trackable, action_name, metric)
+	if (min <= Parse_Data[index][trackable][Catalog_Node][action_name][metric]) then
+	   	min =  Parse_Data[index][trackable][Catalog_Node][action_name][metric]
 	end
-
-	return value
-end
-
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]] 
-function Get_Data_Single_Min_Calculation(min, index, skill, action_name, metric)
-
-	if (min <= Parse_Data[index][skill]['single'][action_name][metric]) then
-	   	min =  Parse_Data[index][skill]['single'][action_name][metric]
-	end
-
 	return min
 end
 
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]] 
-function Get_Data_Single_Max_Calculation(max, index, skill, action_name, metric)
-
-	if (Parse_Data[index][skill]['single'][action_name][metric] > max) then
-		max = Parse_Data[index][skill]['single'][action_name][metric]
+------------------------------------------------------------------------------------------------------
+-- Helper function for getting cataloged data for maximum metric.
+------------------------------------------------------------------------------------------------------
+-- max         : current observed maximum value
+-- index       : "player_name:mob_name"
+-- trackable   : a tracked item from the Trackable_List
+-- action_name : the name of the action to be cataloged
+-- metric      : a trackable's metric from the Metric_List
+------------------------------------------------------------------------------------------------------
+function Get_Data_Catalog_Max_Calculation(max, index, trackable, action_name, metric)
+	if (Parse_Data[index][trackable][Catalog_Node][action_name][metric] > max) then
+		max = Parse_Data[index][trackable][Catalog_Node][action_name][metric]
 	end
-
 	return max
 end
 
--- ******************************************************************************************************
--- *
--- *                                             Utility Functions
--- *
--- ******************************************************************************************************
-
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]]
+------------------------------------------------------------------------------------------------------
+-- Resets the parsing data and clears the battle log.
+------------------------------------------------------------------------------------------------------
 function Reset_Parser()
 	Parse_Data = {}
-	Skill_Data = {}
+	Trackable_Data = {}
 	Initialized_Players = {}
 	Blog_Content = {}
 	Refresh_Blog()
 end
 
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]]
-function Build_Index(player_name, target_name)
-
-	if (not target_name) then target_name = 'test' end
+------------------------------------------------------------------------------------------------------
+-- Builds the primary index for Parse_Data of the form player_name:mob_name
+------------------------------------------------------------------------------------------------------
+-- player_name : name of the player or entity performing the action
+-- mob_name    : name of the mob or entity receiving the action
+------------------------------------------------------------------------------------------------------
+function Build_Index(player_name, mob_name)
+	if (not mob_name) then mob_name = 'test' end
 
 	if (not player_name) then
-		Add_Message_To_Chat('E', 'Build_Index^metrics', 'player_name: '..tostring(player_name)..' target_name: '..tostring(target_name))
+		Add_Message_To_Chat('E', 'Build_Index^metrics', 'player_name: '..tostring(player_name)..' target_name: '..tostring(mob_name))
 		return
 	end
 
-	return player_name..':'..target_name
+	return player_name..':'..mob_name
 end
 
---[[
-    DESCRIPTION:    Handle weaponskill and skillchain parsing.
-    PARAMETERS :    
-        actor_name  Primary node
-        node        Secondary node
-        damage      Damage from the WS or SC
-        action_name Name of the WS or SC
-]]
-function Single_Damage(player_name, target_name, skill, damage, action_name)
-    local index = Build_Index(player_name, target_name)
-    Init_Data_Single(index, player_name, skill, action_name)
+
+------------------------------------------------------------------------------------------------------
+-- Directs the setting of cataloged data.
+-- Called by the action handling functions.
+------------------------------------------------------------------------------------------------------
+-- player_name : name of the player or entity performing the action
+-- mob_name    : name of the mob or entity receiving the action
+-- trackable   : a tracked item from the Trackable_List
+-- value       : value to be logged
+-- action_name : the name of the action to be cataloged
+------------------------------------------------------------------------------------------------------
+function Catalog_Damage(player_name, mob_name, trackable, value, action_name)
+    local index = Build_Index(player_name, mob_name)
+    Init_Data_Catalog(index, player_name, trackable, action_name)
 
 	local audits = {
 		player_name = player_name,
-		target_name = target_name,
+		target_name = mob_name,
 	}
 
-    if (skill ~= 'healing') then
-    	Update_Data('inc', damage, audits, 'total', 'total') 
+    if (trackable ~= 'healing') then
+    	Update_Data('inc', value, audits, 'total', 'total') 
 
-		if (skill ~= 'sc') then
-			Update_Data('inc', damage, audits, 'total_no_sc', 'total')
+		if (trackable ~= 'sc') then
+			Update_Data('inc', value, audits, 'total_no_sc', 'total')
 		end
 
     end
 
     -- Overall Data
-    Update_Data('inc', damage, audits, skill, 'total')
-    if (damage < Get_Data(player_name, skill, 'min')) then Update_Data('set', damage, audits, skill, 'min') end
-    if (damage > Get_Data(player_name, skill, 'max')) then Update_Data('set', damage, audits, skill, 'max') end
+    Update_Data('inc', value, audits, trackable, 'total')
+    if (value > 0) and (value < Get_Data(player_name, trackable, 'min')) then Update_Data('set', value, audits, trackable, 'min') end
+    if (value > Get_Data(player_name, trackable, 'max')) then Update_Data('set', value, audits, trackable, 'max') end
 
-    -- Single Data
-    Update_Data_Single('inc', damage, audits, skill, action_name, 'total')
+    -- Catalog Data
+    Update_Data_Catalog('inc', value, audits, trackable, action_name, 'total')
     -- 'count' gets incremented in packet_handling.lua
 
-    if (damage < Get_Data_Single(player_name, skill, action_name, 'min')) then
-    	Update_Data_Single('set', damage, audits, skill, action_name, 'min')
+    if (value > 0) and (value < Get_Data_Catalog(player_name, trackable, action_name, 'min')) then
+    	Update_Data_Catalog('set', value, audits, trackable, action_name, 'min')
     end
 
-    if (damage > Get_Data_Single(player_name, skill, action_name, 'max')) then
-    	Update_Data_Single('set', damage, audits, skill, action_name, 'max')
+    if (value > Get_Data_Catalog(player_name, trackable, action_name, 'max')) then
+    	Update_Data_Catalog('set', value, audits, trackable, action_name, 'max')
     end
 end
 
--- ******************************************************************************************************
--- *
--- *                                           Running Accuracy
--- *
--- ******************************************************************************************************
-
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]]
+------------------------------------------------------------------------------------------------------
+-- Keeps a tally of the last Running_Accuracy_Limit amount of hit attempts.
+-- This is called by the action handling functions.
+------------------------------------------------------------------------------------------------------
+-- player_name : primary index for the Running_Accuracy_Data table
+-- hit         : boolean of whether this is a hit or a miss
+------------------------------------------------------------------------------------------------------
 function Running_Accuracy(player_name, hit)
 	if (not Running_Accuracy_Data[player_name]) then return end
-
 	local max = Count_Table_Elements(Running_Accuracy_Data[player_name])
     if (max >= Running_Accuracy_Limit) then table.remove(Running_Accuracy_Data[player_name], Running_Accuracy_Limit) end
-
 	table.insert(Running_Accuracy_Data[player_name], 1, hit)
 end
 
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]]
+------------------------------------------------------------------------------------------------------
+-- Returns the players accuracy for the last Running_Accuracy_Limit amount of hits.
+------------------------------------------------------------------------------------------------------
+-- player_name : primary index for the Running_Accuracy_Data table
+-- length      : length of the returned accuracy string
+------------------------------------------------------------------------------------------------------
 function Tally_Running_Accuracy(player_name, length)
 	if (not Running_Accuracy_Data[player_name]) then return Format_String('0', length, nil, nil, true) end
 
@@ -447,16 +465,9 @@ function Tally_Running_Accuracy(player_name, length)
 	return Format_Percent(hits, count, length, color)
 end
 
--- ******************************************************************************************************
--- *
--- *                                              Sorting
--- *
--- ******************************************************************************************************
-
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]]
+------------------------------------------------------------------------------------------------------
+-- Sorting function for the Total_Damage_Race table.
+------------------------------------------------------------------------------------------------------
 function Sort_Damage()
 	Populate_Total_Damage_Table()
 	table.sort(Total_Damage_Race, function (a, b)
@@ -466,48 +477,45 @@ function Sort_Damage()
 	end)
 end
 
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]]
+------------------------------------------------------------------------------------------------------
+-- Builds the Total_Damage_Race table.
+-- This table contains the total amount of damage that each recognized player has done.
+-- Capable of filtering out skillchain damage.
+------------------------------------------------------------------------------------------------------
 function Populate_Total_Damage_Table()
 	Total_Damage_Race = {}
-
 	local damage
 	for index, _ in pairs(Initialized_Players) do
-
 		if (Include_SC_Damage) then
 			damage = Get_Data(index, 'total', 'total')
 		else
 			damage = Get_Data(index, 'total_no_sc', 'total')
 		end
-
 		table.insert(Total_Damage_Race, {index, damage})
 	end
 end
 
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]]
-function Sort_Single_Damage(player_name)
-	Populate_Single_Damage_Table(player_name)
-	
-	table.sort(Single_Damage_Race, function (a, b)
+------------------------------------------------------------------------------------------------------
+-- Sorting function for the Catalog_Damage_Race table.
+------------------------------------------------------------------------------------------------------
+-- player_name : name of the player that did the cataloged action
+------------------------------------------------------------------------------------------------------
+function Sort_Catalog_Damage(player_name)
+	Populate_Catalog_Damage_Table(player_name)
+	table.sort(Catalog_Damage_Race, function (a, b)
 		local a_damage = a[2]
 		local b_damage = b[2]
-		return (a_damage > b_damage) 
+		return (a_damage > b_damage)
 	end)
 end
 
---[[
-    DESCRIPTION:    
-    PARAMETERS :    
-]]
-function Populate_Single_Damage_Table(player_name)
-	Single_Damage_Race = {}
-
-	for action_name, _ in pairs(Skill_Data[Focused_Skill][player_name]) do
-		table.insert(Single_Damage_Race, {action_name, Get_Data_Single(player_name, Focused_Skill, action_name, 'total')})
+------------------------------------------------------------------------------------------------------
+-- Builds the Catalog_Damage_Race table.
+-- This table contains the total amount of damage that each recognized player has done for a cataloged action.
+------------------------------------------------------------------------------------------------------
+function Populate_Catalog_Damage_Table(player_name)
+	Catalog_Damage_Race = {}
+	for action_name, _ in pairs(Trackable_Data[Focused_Trackable][player_name]) do
+		table.insert(Catalog_Damage_Race, {action_name, Get_Data_Catalog(player_name, Focused_Trackable, action_name, 'total')})
 	end
 end

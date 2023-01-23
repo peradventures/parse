@@ -1,21 +1,30 @@
-Focus_Window, Focus_Content  = Create_Window(700, 100, 10, nil, 255)
-Texts.stroke_width(Focus_Window, 2)
-Texts.stroke_color(Focus_Window, 28, 28, 28)
-Texts.bold(Focus_Window, true)
+Focus_Window = Window:New({
+    name       = 'Focus',
+    message    = 'Focus',
+    x_pos      = 700,
+    y_pos      = 100,
+    padding    = 1,
+    bg_alpha   = 225,
+    bg_red     = 0,
+    bg_green   = 0,
+    bg_blue    = 15,
+    bg_visible = true,
+})
 
-Show_Focus  = false
-Focused_Skill  = 'ws'
+Focused_Trackable  = 'ws'
 Focused_Entity = 'Amarara'
-
 
 --[[
     DESCRIPTION:    Refresh the focus window.
 ]]
 function Refresh_Focus_Window()
-    if (Show_Focus) then Focus_Window:show() else Focus_Window:hide() end
-    Focus_Player()
-    Focus_Content.token = Concat_Strings(Focus_Layout)
-    Focus_Window:update(Focus_Content)
+    if (Settings.Focus.Show) then
+        Focus_Window.Show()
+        Focus_Player()
+        Focus_Window.Update()
+    else
+        Focus_Window.Hide()
+    end
 end
 
 --[[
@@ -24,10 +33,8 @@ end
 function Focus_Player()
     local player_name = Focused_Entity
 
-    Focus_Layout = {}
-
-    table.insert(Focus_Layout, player_name..' ('..Col_Grand_Total(player_name)..')')
-    table.insert(Focus_Layout, '')
+    Focus_Window.Add_Line(player_name..' ('..Col_Grand_Total(player_name)..')')
+    Focus_Window.Add_Line('')
 
     Focus_Melee(player_name)
     Focus_Ranged(player_name)
@@ -38,7 +45,7 @@ function Focus_Player()
     Focus_Healing(player_name)
     Focus_Pet(player_name)
 
-    table.insert(Focus_Layout, ' ')
+    Focus_Window.Add_Line(' ')
 
     Single_Data(player_name)
 end
@@ -58,7 +65,7 @@ function Focus_Melee(player_name)
                              Col_Header_Basic('T Acc', true) ..' '..
                              Col_Header_Basic('P Acc', true) ..' '..
                              Col_Header_Basic('S Acc', true)
-        table.insert(Focus_Layout, melee_header)
+        Focus_Window.Add_Line(melee_header)
 
         -- Construct string
         local melee_data = Col_Damage(player_name, 'melee')           ..' '..
@@ -68,8 +75,8 @@ function Focus_Melee(player_name)
                            Col_Accuracy(player_name, 'melee secondary')
 
         -- Output
-        table.insert(Focus_Layout, melee_data)
-        table.insert(Focus_Layout, '')
+        Focus_Window.Add_Line(melee_data)
+        Focus_Window.Add_Line('')
     end
 
 end
@@ -89,7 +96,7 @@ function Focus_Ranged(player_name)
                               Col_Header_Basic('% Acc', true) ..' '..
                               Col_Header_Basic('Crit')        ..' '..
                               Col_Header_Basic('% Crit', true)
-        table.insert(Focus_Layout, ranged_header)
+        Focus_Window.Add_Line(ranged_header)
 
         -- Construct string
         local ranged_data = Col_Damage(player_name, 'ranged')       ..' '..
@@ -99,8 +106,8 @@ function Focus_Ranged(player_name)
                             Col_Crit_Damage(player_name, 'ranged', true)
 
         -- Output
-        table.insert(Focus_Layout, ranged_data)
-        table.insert(Focus_Layout, '')
+        Focus_Window.Add_Line(ranged_data)
+        Focus_Window.Add_Line('')
     end
 
 end
@@ -121,7 +128,7 @@ function Focus_Crits(player_name)
                              Col_Header_Basic('T Rate', true) ..' '..
                              Col_Header_Basic('M Rate', true) ..' '..
                              Col_Header_Basic('R Rate', true)
-        table.insert(Focus_Layout, crits_header)
+        Focus_Window.Add_Line(crits_header)
 
         -- Construct string
         local crit_data = Col_Crit_Damage(player_name, 'combined')       ..' '..
@@ -131,8 +138,8 @@ function Focus_Crits(player_name)
                           Col_Crit_Rate(player_name, 'ranged')
 
         -- Output
-        table.insert(Focus_Layout, crit_data)
-        table.insert(Focus_Layout, '')
+        Focus_Window.Add_Line(crit_data)
+        Focus_Window.Add_Line('')
     end
 
 end
@@ -152,7 +159,7 @@ function Focus_WS_And_SC(player_name)
                           Col_Header_Basic('% Acc', true) ..' '..
                           Col_Header_Basic('SC')          ..' '..
                           Col_Header_Basic('% SC', true)
-        table.insert(Focus_Layout, ws_header)
+        Focus_Window.Add_Line(ws_header)
 
         -- Construct string
         local ws_data = Col_Damage(player_name, 'ws')       ..' '..
@@ -162,8 +169,8 @@ function Focus_WS_And_SC(player_name)
                         Col_Damage(player_name, 'sc', true)
 
         -- Output
-        table.insert(Focus_Layout, ws_data)
-        table.insert(Focus_Layout, '')
+        Focus_Window.Add_Line(ws_data)
+        Focus_Window.Add_Line('')
     end
 
 end
@@ -180,15 +187,15 @@ function Focus_Magic(player_name)
         -- Header
         local magic_header = Col_Header_Basic('Magic')..' '..
                              Col_Header_Basic('% Dmg', true)
-        table.insert(Focus_Layout, magic_header)
+        Focus_Window.Add_Line(magic_header)
 
         -- Construct string
         local magic_data = Col_Damage(player_name, 'magic')..' '..
                            Col_Damage(player_name, 'magic', true)
 
         -- Output
-        table.insert(Focus_Layout, magic_data)
-        table.insert(Focus_Layout, '')
+        Focus_Window.Add_Line(magic_data)
+        Focus_Window.Add_Line('')
     end
 
 end
@@ -205,15 +212,15 @@ function Focus_Ability(player_name)
         -- Header
         local ability_header = Col_Header_Basic('Ability')..' '..
                                Col_Header_Basic('% Dmg', true)
-        table.insert(Focus_Layout, ability_header)
+        Focus_Window.Add_Line(ability_header)
 
         -- Construct string
         local ability_data = Col_Damage(player_name, 'ability')..' '..
                              Col_Damage(player_name, 'ability', true)
 
         -- Output
-        table.insert(Focus_Layout, ability_data)
-        table.insert(Focus_Layout, '')
+        Focus_Window.Add_Line(ability_data)
+        Focus_Window.Add_Line('')
     end
 
 end
@@ -230,15 +237,15 @@ function Focus_Healing(player_name)
         -- Header
         local healing_header = Col_Header_Basic('Healing')..' '..
                                Col_Header_Basic('% Tot', true)
-        table.insert(Focus_Layout, healing_header)
+        Focus_Window.Add_Line(healing_header)
 
         -- Construct string
         local healing_data = Col_Damage(player_name, 'healing')..' '..
                              Col_Damage(player_name, 'healing', true)
 
         -- Output
-        table.insert(Focus_Layout, healing_data)
-        table.insert(Focus_Layout, '')
+        Focus_Window.Add_Line(healing_data)
+        Focus_Window.Add_Line('')
     end
 
 end
@@ -259,7 +266,7 @@ function Focus_Pet(player_name)
                            Col_Header_Basic('Pet R')       ..' '..
                            Col_Header_Basic('Pet WS')      ..' '..
                            Col_Header_Basic('Pet A')
-        table.insert(Focus_Layout, pet_header)
+        Focus_Window.Add_Line(pet_header)
 
         -- Construct string
         local pet_data = Col_Damage(player_name, 'pet')        ..' '..
@@ -270,8 +277,8 @@ function Focus_Pet(player_name)
                          Col_Damage(player_name, 'pet_ability')
 
         -- Output
-        table.insert(Focus_Layout, pet_data)
-        table.insert(Focus_Layout, '')
+        Focus_Window.Add_Line(pet_data)
+        Focus_Window.Add_Line('')
 
     end
 
@@ -281,7 +288,7 @@ end
     DESCRIPTION:Builds the focus window.
 ]]
 function Single_Data(player_name)
-    if (not Focused_Skill) then Focused_Skill = 'ws' end
+    if (not Focused_Trackable) then Focused_Trackable = 'ws' end
 
     local header
     local name_col   = Column_Widths['name']
@@ -296,16 +303,16 @@ function Single_Data(player_name)
     header = header..Col_Header_Basic('Avg')
     header = header..Col_Header_Basic('Min')
     header = header..Col_Header_Basic('Max')
-    table.insert(Focus_Layout, header)
+    Focus_Window.Add_Line(header)
 
     -- Error Protection
-    if (not Skill_Data[Focused_Skill]) then return end
-    if (not Skill_Data[Focused_Skill][player_name]) then return end
+    if (not Trackable_Data[Focused_Trackable]) then return end
+    if (not Trackable_Data[Focused_Trackable][player_name]) then return end
 
-    Sort_Single_Damage(player_name)
+    Sort_Catalog_Damage(player_name)
 
     local action_name
-    for _, data in ipairs(Single_Damage_Race) do
+    for _, data in ipairs(Catalog_Damage_Race) do
         action_name = data[1]
         Single_Row(player_name, action_name)
     end
@@ -325,7 +332,7 @@ function Single_Row(player_name, action_name)
     row = row..Col_Single_Accuracy(player_name, action_name)
     row = row..Col_Single_Average_Damage(player_name, action_name)
 
-    local min = Get_Data_Single(player_name, Focused_Skill, action_name, 'min')
+    local min = Get_Data_Catalog(player_name, Focused_Trackable, action_name, 'min')
     if (min == 100000) then
         row = row..Col_Single_Damage(player_name, action_name, 'ignore')
     else
@@ -334,5 +341,5 @@ function Single_Row(player_name, action_name)
 
     row = row..Col_Single_Damage(player_name, action_name, 'max')
 
-    table.insert(Focus_Layout, row)
+    Focus_Window.Add_Line(row)
 end
